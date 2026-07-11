@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 244, 246, 240; /* moon-white */
+  --background-start-rgb: 11, 16, 33; /* midnight-blue */
+  --background-end-rgb: 5, 5, 5; /* space-black */
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      rgb(var(--background-start-rgb)),
+      rgb(var(--background-end-rgb))
+    );
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Star background animations */
+.stars {
+  background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat top center;
+  z-index: -1;
+  animation: move-twink-back 200s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes move-twink-back {
+  from {background-position: 0 0;}
+  to {background-position: -10000px 5000px;}
+}
