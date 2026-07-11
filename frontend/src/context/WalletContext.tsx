@@ -5,7 +5,7 @@ import { WalletState, connectLace, getWalletState } from '@/lib/midnight';
 import type { DAppConnectorAPI } from '@midnight-ntwrk/dapp-connector-api';
 
 interface WalletContextType extends WalletState {
-  connect: () => Promise<void>;
+  connectWallet: () => Promise<void>;
   disconnect: () => void;
 }
 
@@ -19,7 +19,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     connector: null,
   });
 
-  const connect = async () => {
+  const connectWallet = async () => {
     try {
       setState(prev => ({ ...prev, error: null }));
       const connector = await connectLace();
@@ -32,6 +32,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         connector,
       });
     } catch (err: any) {
+      console.error("Wallet connection error:", err);
       setState(prev => ({ ...prev, error: err.message || 'Failed to connect wallet' }));
     }
   };
@@ -46,7 +47,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <WalletContext.Provider value={{ ...state, connect, disconnect }}>
+    <WalletContext.Provider value={{ ...state, connectWallet, disconnect }}>
       {children}
     </WalletContext.Provider>
   );

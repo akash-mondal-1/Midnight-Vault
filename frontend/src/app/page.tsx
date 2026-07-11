@@ -10,8 +10,8 @@ import { useContract } from '@/context/ContractContext';
 import { Shield, Orbit, Lock, Sparkles } from 'lucide-react';
 
 export default function Home() {
-  const { isConnected, address, connect, disconnect } = useWallet();
-  const { registeredMembersCount, registerMember, isLoading, privacyProven, error } = useContract();
+  const { isConnected, address, connectWallet, disconnect, error: walletError } = useWallet();
+  const { registeredMembersCount, registerMember, isLoading, privacyProven, error: contractError } = useContract();
   const [secretInput, setSecretInput] = useState('');
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -42,9 +42,12 @@ export default function Home() {
               </MoonButton>
             </div>
           ) : (
-            <MoonButton onClick={connect}>
-              Connect Lace
-            </MoonButton>
+            <div className="flex items-center gap-4">
+              {walletError && <span className="text-xs text-red-400 max-w-[200px] truncate">{walletError}</span>}
+              <MoonButton onClick={() => connectWallet()}>
+                Connect Lace
+              </MoonButton>
+            </div>
           )}
         </div>
       </header>
@@ -100,7 +103,7 @@ export default function Home() {
           className="flex gap-6"
         >
           {!isConnected && (
-            <MoonButton onClick={connect}>
+            <MoonButton onClick={() => connectWallet()}>
               Enter the Vault
             </MoonButton>
           )}
