@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  proof-server:
+    image: midnightnetwork/proof-server:latest
+    ports:
+      - "6300:6300"
+    environment:
+      - NETWORK=preview
+      - LOG_LEVEL=info
+    volumes:
+      - ./managed:/app/managed
+
+  app:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - PROOF_SERVER_URL=http://proof-server:6300
+    depends_on:
+      - proof-server
