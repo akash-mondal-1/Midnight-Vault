@@ -230,7 +230,19 @@ npm run deploy:preprod
 
 ## 🌕 Future Moon Phases (Roadmap)
 
-- **Frontend Integration (Level 2):** A React/Next.js interface for seamless user interaction.
-- **Wallet Connection:** Integrating the Midnight Lace Wallet for signing transactions.
+- **Frontend Integration (Level 2):** ✅ Completed! A Next.js moon-themed premium UI is available in `frontend/`.
+- **Wallet Connection:** ✅ Completed! Integrated Midnight Lace Wallet via DApp Connector.
 - **Mainnet Deployment:** Upgrading the contract to support complex data schemas for mainnet launch.
 - **Marketplace & Onboarding:** Expanding the vault to support generic verifiable credentials.
+
+---
+
+## 🛡️ Privacy Claim
+
+**Observable Privacy Behavior:** 
+When a user calls the `registerMember` circuit through the frontend, they input a numeric `membershipSecret`. This secret is passed to the smart contract strictly as a **Private Witness**. The computation of the ZK proof happens entirely within the user's local browser via the Lace wallet and Midnight DApp connector.
+
+The network *only* receives a mathematical zero-knowledge proof that the user possesses a valid secret. The smart contract validates this proof and triggers a `disclose()` event to broadcast the successful registration and increments the public `registeredMembersCount` ledger state. 
+
+**What is proven:** The user successfully authenticated their membership status by knowing the exact secret.
+**What is hidden:** The actual `membershipSecret` is never shown, transmitted, or logged. The public observer can see the count increase, but has zero knowledge of the secret used to trigger the increase.
