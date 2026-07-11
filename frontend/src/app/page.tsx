@@ -154,9 +154,9 @@ export default function Home() {
               Enter your private witness credential. It will never leave your browser.
             </p>
 
-            {error && (
+            {contractError && (
               <div className="mb-6 p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-red-200 text-sm">
-                {error}
+                {contractError}
               </div>
             )}
 
