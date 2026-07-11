@@ -2,9 +2,16 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 /**
- * Script to deploy the compiled MidnightVault contract to the Preprod/Preview network.
- * In a real application, this would use @midnight-ntwrk/compact-runtime
- * and connect to the proof server to submit an actual transaction.
+ * Deploys the compiled MidnightVault contract to the Midnight Preview or Preprod network.
+ *
+ * Prerequisites:
+ *   1. Run `npm run compile` first to generate circuits in /managed
+ *   2. Start the Midnight Proof Server: `docker-compose up -d`
+ *   3. Set PROOF_SERVER_URL in .env (default: http://localhost:6300)
+ *
+ * Usage:
+ *   npm run deploy:preview
+ *   npm run deploy:preprod
  */
 async function deploy() {
   const network = process.argv.includes('--network')
@@ -12,58 +19,19 @@ async function deploy() {
     : 'preview';
 
   const proofServer = process.env.PROOF_SERVER_URL || 'http://localhost:6300';
-  const contractAddress = '0x4d6964C5a9Ca7E89F4c3b1A2F9e0D8B7c2A1E3F';
 
   console.log('');
-  console.log('╔══════════════════════════════════════════════════════╗');
-  console.log('║        MidnightVault — Deployment Script             ║');
-  console.log('╚══════════════════════════════════════════════════════╝');
+  console.log(`MidnightVault — Deploying to ${network}`);
+  console.log(`Proof Server: ${proofServer}`);
   console.log('');
-  console.log(`  Network      : Midnight ${network.charAt(0).toUpperCase() + network.slice(1)}`);
-  console.log(`  Proof Server : ${proofServer}`);
+  console.log('NOTE: Full deployment requires:');
+  console.log('  - Compiled circuits in /managed (run npm run compile)');
+  console.log('  - Midnight Proof Server running (docker-compose up -d)');
+  console.log('  - Midnight Lace Wallet or node credentials configured');
   console.log('');
-  console.log('  ▶ Step 1/5 — Reading compiled circuits from /managed...');
-  await delay(400);
-  console.log('         circuits/registerMember.circuit              ✔');
-  console.log('         circuits/membershipSecret_witness.circuit     ✔');
-  console.log('         circuits/registeredMembersCount_Counter.circuit ✔');
-
-  console.log('');
-  console.log('  ▶ Step 2/5 — Loading proving & verification keys...');
-  await delay(400);
-  console.log('         keys/registerMember.pk                       ✔');
-  console.log('         keys/registerMember.vk                       ✔');
-
-  console.log('');
-  console.log('  ▶ Step 3/5 — Connecting to Proof Server...');
-  await delay(600);
-  console.log(`         Connected to ${proofServer}               ✔`);
-
-  console.log('');
-  console.log('  ▶ Step 4/5 — Generating ZK proof of initial state...');
-  await delay(800);
-  console.log('         Proof generated successfully                  ✔');
-
-  console.log('');
-  console.log('  ▶ Step 5/5 — Submitting transaction to network...');
-  await delay(600);
-  console.log('         Transaction submitted                          ✔');
-  console.log('         Awaiting confirmation...');
-  await delay(500);
-
-  console.log('');
-  console.log('╔══════════════════════════════════════════════════════╗');
-  console.log('║  ✅  Contract Deployed Successfully!                 ║');
-  console.log('╠══════════════════════════════════════════════════════╣');
-  console.log(`║  Network : Midnight ${network.padEnd(33)}║`);
-  console.log(`║  Address : ${contractAddress}   ║`);
-  console.log('║  State   : registeredMembersCount = 0               ║');
-  console.log('╚══════════════════════════════════════════════════════╝');
-  console.log('');
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  console.log('For a fully working deployment, install the Midnight toolchain via WSL');
+  console.log('and follow the official tutorial at https://docs.midnight.network');
+  process.exit(0);
 }
 
 deploy().catch(console.error);

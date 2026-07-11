@@ -139,9 +139,9 @@ npm run compile
 ```
 *This will generate the required circuits and keys inside the `managed/` directory.*
 
-### ✅ Compile Output Screenshot
+### Compile Output
 
-![Successful compile output showing circuits listed](./assets/compile-output.png)
+> 📸 Screenshot will be added after installing the Midnight toolchain via WSL and running a real compilation.
 
 ---
 
@@ -169,16 +169,16 @@ npm run deploy:preview
 npm run deploy:preprod
 ```
 
-### ✅ Deployment Screenshot
+### Deployment Output
 
-![Contract deployed with address shown](./assets/deploy-output.png)
+> 📸 Screenshot will be added after deploying to the Midnight Preview network via WSL.
 
 ---
 
 ## 📜 Contract Address
 
 **Deployed Network:** Midnight Preview  
-**Contract Address:** `0x4d6964C5a9Ca7E89F4c3b1A2F9e0D8B7c2A1E3F`
+**Contract Address:** `<TO BE UPDATED AFTER REAL DEPLOYMENT>`
 
 ---
 
