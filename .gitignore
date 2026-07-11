@@ -1,7 +1,9 @@
 node_modules/
 dist/
 coverage/
-managed/
+managed/*
+!managed/circuits/
+!managed/keys/
 .env
 .cache
 logs/
