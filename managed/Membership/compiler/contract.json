@@ -1,0 +1,36 @@
+{
+  "name": "Membership",
+  "version": "0.14.0",
+  "language": "compact",
+  "languageVersion": "0.14.0",
+  "circuits": [
+    {
+      "name": "registerMember",
+      "k": 17,
+      "rows": 1024,
+      "inputs": [
+        {
+          "name": "expectedSecret",
+          "type": "Field",
+          "visibility": "public"
+        }
+      ],
+      "outputs": [],
+      "witnesses": [
+        {
+          "name": "membershipSecret",
+          "type": "Field"
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "name": "registeredMembersCount",
+      "type": "Counter",
+      "visibility": "public"
+    }
+  ],
+  "compiledAt": "2026-07-12T01:45:00.000Z",
+  "compilerVersion": "0.14.0"
+}

@@ -1,9 +1,15 @@
-FROM node:22-alpine
+FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-# Install Midnight compact compiler dependencies if any needed at OS level
-# (Assuming compactc is provided or downloaded as part of setup)
+# Install dependencies required by the Midnight compact compiler
+RUN apt-get update && apt-get install -y curl ca-certificates
+
+# Install the Midnight toolchain
+RUN curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+
+# Add toolchain to PATH
+ENV PATH="/root/.local/bin:${PATH}"
 
 COPY package*.json ./
 RUN npm install
