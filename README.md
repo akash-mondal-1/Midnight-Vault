@@ -32,7 +32,7 @@ graph TD
     C -->|Generate| D(Proof of Validity)
     D -->|Submit Transaction| E{Preview Deployment}
     E -->|Valid| F[Public State Updated]
-    E -->|Valid| G[disclose() Event Logged]
+    E -->|Valid| G["disclose() Event Logged"]
     E -->|Address| H[Contract Address]
 ```
 
