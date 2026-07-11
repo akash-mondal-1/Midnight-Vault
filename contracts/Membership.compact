@@ -1,0 +1,35 @@
+pragma language_version >= 0.14.0;
+
+export ledger registeredMembersCount: Counter;
+
+ledger Counter {
+  count: Field;
+  
+  constructor() {
+    count = 0;
+  }
+  
+  increment() {
+    count = count + 1;
+  }
+}
+
+// Private witness containing the user's private credential (secret)
+witness membershipSecret(): Field;
+
+export circuit registerMember(expectedSecret: Field): [] {
+  // Read the private witness secret (Private computation)
+  const secret = membershipSecret();
+  
+  // Validate the secret without revealing it directly in the public state
+  // In a real application, this could be a signature verification or ZK proof of membership
+  assert secret == expectedSecret "Invalid membership secret provided";
+  
+  // Use disclose() to deliberately reveal a piece of information
+  // We disclose the fact that a verification took place successfully
+  const registrationSuccess = 1; 
+  disclose(registrationSuccess);
+
+  // Increment the public counter of registered members (Public state transition)
+  registeredMembersCount.increment();
+}
