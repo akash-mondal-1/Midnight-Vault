@@ -141,24 +141,57 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                 </div>
               ) : (
                 <div className="mb-6">
-                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 mb-3">
                     <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm text-amber-200 font-medium mb-1">Lace Wallet Not Detected</p>
-                      <p className="text-xs text-amber-200/70 mb-3">
-                        Install the Lace wallet browser extension and enable the Midnight network feature to connect.
+                      <p className="text-sm text-amber-200 font-medium mb-1">Midnight Feature Not Active</p>
+                      <p className="text-xs text-amber-200/70">
+                        You have Lace installed, but the <strong>Midnight dApp connector</strong> is not enabled.
                       </p>
-                      <a
-                        href="https://www.lace.io/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        id="lace-install-link"
-                        className="inline-flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-100 transition-colors"
-                      >
-                        Download Lace Wallet
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
                     </div>
+                  </div>
+
+                  {/* Step-by-step guide */}
+                  <div className="p-4 rounded-2xl bg-white/3 border border-white/10 space-y-3">
+                    <p className="text-xs text-silver/60 uppercase tracking-widest mb-2">How to enable Midnight in Lace</p>
+                    {[
+                      "Open Lace extension → click the ⚙️ Settings icon",
+                      "Go to Settings → Experiments (or Beta features)",
+                      'Enable "Midnight" or "Midnight dApp connector"',
+                      "Switch network to Preprod in Lace settings",
+                      "Reload this page and try again",
+                    ].map((step, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full bg-soft-indigo/30 border border-soft-indigo/50 flex items-center justify-center flex-shrink-0 text-[10px] text-moon-white font-medium">
+                          {i + 1}
+                        </div>
+                        <p className="text-xs text-silver/70 leading-relaxed">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-3 mt-3">
+                    <a
+                      href="https://www.lace.io/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      id="lace-install-link"
+                      className="inline-flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-100 transition-colors"
+                    >
+                      Get Lace Wallet
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <span className="text-silver/20">·</span>
+                    <a
+                      href="https://docs.midnight.network/develop/tutorial/using/prereqs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      id="midnight-docs-link"
+                      className="inline-flex items-center gap-1.5 text-xs text-silver/50 hover:text-silver/80 transition-colors"
+                    >
+                      Midnight Docs
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
                 </div>
               )}

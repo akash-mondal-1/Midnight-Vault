@@ -4,6 +4,7 @@ import "./globals.css";
 import { WalletProvider } from "@/context/WalletContext";
 import { ContractProvider } from "@/context/ContractContext";
 import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
+import { ExtensionErrorSuppressor } from "@/components/ui/ExtensionErrorSuppressor";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <ExtensionErrorSuppressor />
         <AnimatedBackground />
         <WalletProvider>
           <ContractProvider>
