@@ -11,24 +11,31 @@ export type WalletState = {
 
 /**
  * Detects available Midnight wallets injected into window.midnight.
- * Prefers mnLace, falls back to any available wallet.
+ * Checks that the connector actually has an enable() function.
+ * Handles UUID-based key injection used by newer Lace versions.
  */
 export const detectMidnightWallet = (): DAppConnectorAPI | null => {
   if (typeof window === 'undefined') return null;
-  
+
   // @ts-ignore - window.midnight is injected by Lace wallet extension
   const midnight = window.midnight;
-  if (!midnight) return null;
+  if (!midnight || typeof midnight !== 'object') return null;
 
-  // Prefer the official Lace connector key
-  if (midnight.mnLace) return midnight.mnLace as DAppConnectorAPI;
-
-  // Fallback: enumerate all injected wallets
-  const walletKeys = Object.keys(midnight);
-  if (walletKeys.length > 0) {
-    return midnight[walletKeys[0]] as DAppConnectorAPI;
+  // Check mnLace first — but verify it actually has enable()
+  if (midnight.mnLace && typeof midnight.mnLace.enable === 'function') {
+    return midnight.mnLace as DAppConnectorAPI;
   }
 
+  // Enumerate ALL keys — Lace may inject under a UUID-based key in newer versions
+  for (const key of Object.keys(midnight)) {
+    const wallet = midnight[key];
+    if (wallet && typeof wallet === 'object' && typeof wallet.enable === 'function') {
+      return wallet as DAppConnectorAPI;
+    }
+  }
+
+  // Last resort: if something is injected but enable isn't a function yet
+  // (extension still loading), return null so user retries
   return null;
 };
 

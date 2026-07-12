@@ -29,12 +29,14 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [isWalletAvailable, setIsWalletAvailable] = useState(false);
 
   // Check wallet availability after mount (extension injects after DOM ready)
+  // Try multiple times to handle slow extension injection
   useEffect(() => {
     const check = () => setIsWalletAvailable(isMidnightWalletAvailable());
-    // Check immediately and after a short delay to allow the extension to inject
     check();
-    const timer = setTimeout(check, 800);
-    return () => clearTimeout(timer);
+    const t1 = setTimeout(check, 500);
+    const t2 = setTimeout(check, 1500);
+    const t3 = setTimeout(check, 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
   const connectWallet = useCallback(async () => {
