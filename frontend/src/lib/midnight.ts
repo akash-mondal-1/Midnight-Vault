@@ -57,26 +57,25 @@ export const connectLace = async (): Promise<{
     );
   }
 
-  // Collect all candidates: midnight itself + all its values
-  const candidates: Array<{ key: string; val: any }> = [
-    { key: '__self__', val: midnight },
-    ...Object.keys(midnight).map(k => ({ key: k, val: midnight[k] })),
-  ];
+  // Find the first UUID key injected by Lace (or use midnight directly)
+  const keys = Object.keys(midnight);
+  const connectorKey = keys.length > 0 ? keys[0] : '__self__';
+  const connector = keys.length > 0 ? midnight[keys[0]] : midnight;
 
-  for (const { val } of candidates) {
-    if (!val || typeof val !== 'object') continue;
-
-    // Only one supported flow: DAppConnectorAPI exposes enable()
-    if (typeof val.enable === 'function') {
-      const walletApi = await val.enable();
-      return { connector: val as DAppConnectorAPI, walletApi };
-    }
+  if (!connector) {
+    throw new Error('Lace is installed but no valid connector was found at window.midnight.');
   }
 
-  throw new Error(
-    'Lace is installed but the Midnight connector API could not be accessed. ' +
-    'Please ensure the Midnight feature is enabled in Lace Settings → Experiments, then reload.'
-  );
+  // The official SDK v3.0.0 flow: Call enable() to get the walletApi
+  if (typeof connector.enable !== 'function') {
+    console.error(`[MidnightVault] Connector at window.midnight["${connectorKey}"] does not have enable().`, connector);
+    throw new Error(`The Midnight wallet connector does not support enable(). This DApp requires SDK v3.0.0. Please check for Lace extension updates.`);
+  }
+
+  console.log(`[MidnightVault] Found valid connector at window.midnight["${connectorKey}"]. Calling enable()...`);
+  const walletApi = await connector.enable();
+  
+  return { connector: connector as DAppConnectorAPI, walletApi };
 };
 
 /**

@@ -111,6 +111,8 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
        */
 
       // Get service URIs from the connected wallet (real network endpoints)
+      if (!connector) throw new Error('Connector is null. Wallet may not be fully connected.');
+      
       let serviceConfig;
       try {
         serviceConfig = await connector.serviceUriConfig();
