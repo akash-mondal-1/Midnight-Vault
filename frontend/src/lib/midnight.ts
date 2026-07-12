@@ -1,66 +1,79 @@
-import type { DAppConnectorAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { DAppConnectorAPI, DAppConnectorWalletAPI } from '@midnight-ntwrk/dapp-connector-api';
 
 export type WalletState = {
   isConnected: boolean;
   address: string | null;
+  coinPublicKey: string | null;
   error: string | null;
   connector: DAppConnectorAPI | null;
+  walletApi: DAppConnectorWalletAPI | null;
 };
 
-export const connectLace = async (): Promise<DAppConnectorAPI> => {
-  if (typeof window === 'undefined') {
-    throw new Error('Window is not defined');
-  }
-
-  try {
-    // @ts-ignore - midnight is injected by Lace
-    const midnight = window.midnight;
-    
-    if (!midnight || !midnight.mnLace) {
-      throw new Error('Lace wallet not found.');
-    }
-
-    const isEnabled = await midnight.mnLace.isEnabled();
-    const connector = await midnight.mnLace.enable();
-    return connector as unknown as DAppConnectorAPI;
-  } catch (err: any) {
-    console.warn("Real Lace connection failed, falling back to Mock Wallet for demo purposes:", err);
-    
-    // Mock the DAppConnectorAPI so the demo can continue even if extensions conflict
-    return {
-      name: 'Mock Lace Wallet',
-      apiVersion: '1.0.0',
-      isEnabled: async () => true,
-      enable: async () => ({} as any),
-      serviceUriConfig: async () => ({
-        indexerUri: 'http://mock',
-        indexerWsUri: 'ws://mock',
-        proverServerUri: 'http://mock',
-        substrateNodeUri: 'http://mock',
-      }),
-      state: () => ({
-        addresses: async () => ['mock1address9x9x9x9x9x9x9x9x9x9x9x9x9x9x9'],
-      })
-    } as unknown as DAppConnectorAPI;
-  }
-};
-
-export const getWalletState = async (connector: DAppConnectorAPI): Promise<Partial<WalletState>> => {
-  try {
-    const api = connector as any;
-    const addresses = await api.state().addresses();
-    if (addresses && addresses.length > 0) {
-      return {
-        isConnected: true,
-        address: addresses[0],
-      };
-    }
-  } catch (error) {
-    console.error("Failed to get wallet state", error);
-  }
+/**
+ * Detects available Midnight wallets injected into window.midnight.
+ * Prefers mnLace, falls back to any available wallet.
+ */
+export const detectMidnightWallet = (): DAppConnectorAPI | null => {
+  if (typeof window === 'undefined') return null;
   
+  // @ts-ignore - window.midnight is injected by Lace wallet extension
+  const midnight = window.midnight;
+  if (!midnight) return null;
+
+  // Prefer the official Lace connector key
+  if (midnight.mnLace) return midnight.mnLace as DAppConnectorAPI;
+
+  // Fallback: enumerate all injected wallets
+  const walletKeys = Object.keys(midnight);
+  if (walletKeys.length > 0) {
+    return midnight[walletKeys[0]] as DAppConnectorAPI;
+  }
+
+  return null;
+};
+
+/**
+ * Returns true if a Midnight-compatible wallet is available in the browser.
+ */
+export const isMidnightWalletAvailable = (): boolean => {
+  return detectMidnightWallet() !== null;
+};
+
+/**
+ * Connects to the Lace wallet via the DApp Connector API.
+ * This will trigger the wallet's permission dialog in the browser.
+ * Returns the enabled wallet API upon user approval.
+ */
+export const connectLace = async (): Promise<{
+  connector: DAppConnectorAPI;
+  walletApi: DAppConnectorWalletAPI;
+}> => {
+  if (typeof window === 'undefined') {
+    throw new Error('Window is not defined. This must run in a browser.');
+  }
+
+  const connector = detectMidnightWallet();
+  
+  if (!connector) {
+    throw new Error(
+      'Midnight Lace Wallet not found. Please install the Lace wallet extension and enable the Midnight network in its settings.'
+    );
+  }
+
+  // Request wallet access — this triggers the Lace permission popup
+  const walletApi = await connector.enable();
+  return { connector, walletApi };
+};
+
+/**
+ * Fetches the wallet state (address, coinPublicKey) from the enabled wallet API.
+ */
+export const getWalletState = async (
+  walletApi: DAppConnectorWalletAPI
+): Promise<{ address: string; coinPublicKey: string }> => {
+  const state = await walletApi.state();
   return {
-    isConnected: false,
-    address: null,
+    address: state.address,
+    coinPublicKey: state.coinPublicKey,
   };
 };

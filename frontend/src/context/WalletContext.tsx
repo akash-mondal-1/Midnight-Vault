@@ -1,10 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { WalletState, connectLace, getWalletState } from '@/lib/midnight';
-import type { DAppConnectorAPI } from '@midnight-ntwrk/dapp-connector-api';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import {
+  WalletState,
+  connectLace,
+  getWalletState,
+  isMidnightWalletAvailable,
+} from '@/lib/midnight';
+import type { DAppConnectorWalletAPI } from '@midnight-ntwrk/dapp-connector-api';
 
 interface WalletContextType extends WalletState {
+  isWalletAvailable: boolean;
   connectWallet: () => Promise<void>;
   disconnect: () => void;
 }
@@ -15,39 +21,63 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, setState] = useState<WalletState>({
     isConnected: false,
     address: null,
+    coinPublicKey: null,
     error: null,
     connector: null,
+    walletApi: null,
   });
+  const [isWalletAvailable, setIsWalletAvailable] = useState(false);
 
-  const connectWallet = async () => {
+  // Check wallet availability after mount (extension injects after DOM ready)
+  useEffect(() => {
+    const check = () => setIsWalletAvailable(isMidnightWalletAvailable());
+    // Check immediately and after a short delay to allow the extension to inject
+    check();
+    const timer = setTimeout(check, 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const connectWallet = useCallback(async () => {
+    setState(prev => ({ ...prev, error: null }));
+
     try {
-      setState(prev => ({ ...prev, error: null }));
-      const connector = await connectLace();
-      const walletState = await getWalletState(connector);
-      
+      const { connector, walletApi } = await connectLace();
+      const { address, coinPublicKey } = await getWalletState(walletApi);
+
       setState({
-        isConnected: walletState.isConnected || false,
-        address: walletState.address || null,
+        isConnected: true,
+        address,
+        coinPublicKey,
         error: null,
         connector,
+        walletApi,
       });
-    } catch (err: any) {
-      console.error("Wallet connection error:", err);
-      setState(prev => ({ ...prev, error: err.message || 'Failed to connect wallet' }));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to connect wallet';
+      console.error('Wallet connection error:', err);
+      setState(prev => ({
+        ...prev,
+        isConnected: false,
+        error: message,
+        connector: null,
+        walletApi: null,
+      }));
     }
-  };
+  }, []);
 
-  const disconnect = () => {
+  const disconnect = useCallback(() => {
     setState({
       isConnected: false,
       address: null,
+      coinPublicKey: null,
       error: null,
       connector: null,
+      walletApi: null,
     });
-  };
+  }, []);
 
   return (
-    <WalletContext.Provider value={{ ...state, connectWallet, disconnect }}>
+    <WalletContext.Provider value={{ ...state, isWalletAvailable, connectWallet, disconnect }}>
       {children}
     </WalletContext.Provider>
   );
