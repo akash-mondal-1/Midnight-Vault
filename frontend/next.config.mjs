@@ -1,8 +1,30 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Required for Vercel deployment — suppress build errors on missing optional modules
+  // Allow browser extensions (Lace wallet) to inject scripts properly
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            // Allow eval() needed by wallet extensions, and allow extension scripts
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' chrome-extension: moz-extension:",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self' https://*.midnight.network wss://*.midnight.network https://fonts.googleapis.com https://fonts.gstatic.com",
+              "frame-src 'none'",
+            ].join('; '),
+          },
+        ],
+      },
+    ];
+  },
+
   webpack: (config) => {
-    // Handle node-specific modules that aren't available in browser
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
