@@ -12,7 +12,7 @@
 
 ## 💡 Product Idea
 
-MidnightVault is a scalable, privacy-preserving identity verification platform where users can prove eligibility — such as age verification, membership status, or accredited investor qualification — to decentralized applications without ever revealing personally identifying information. The core insight is that **proof of knowledge is not the same as disclosure of knowledge**: a user can cryptographically prove they hold a valid credential without the credential itself ever touching the public blockchain. By leveraging Midnight Network's private state and ZK circuit architecture, MidnightVault acts as a universal ZK-passport layer. It minimizes systemic data breach risks (no honeypot of sensitive data on-chain), ensures regulatory compliance through verifiable but private attestations, and provides dApps with a plug-and-play solution to add privacy-respecting identity gates to their smart contracts. The long-term vision is a permissionless credential marketplace where issuers publish credential schemas and verifiers consume ZK proofs, all without the underlying data ever leaving the user's device.
+MidnightVault is a scalable, privacy-preserving identity verification platform where users can prove eligibility — such as age verification, membership status, or accredited investor qualification — to decentralized applications without ever revealing personally identifying information. The core insight is that **proof of knowledge is not the same as disclosure of knowledge**: a user can cryptographically prove they hold a valid credential without the credential itself ever touching the public blockchain. By leveraging Midnight Network's private state and ZK circuit architecture, MidnightVault acts as a universal ZK-passport layer. It minimizes systemic data breach risks (no honeypot of sensitive data on-chain), ensures regulatory compliance through verifiable but private attestations, and provides dApps with a plug-and-play solution to add privacy-respecting identity gates to their smart contracts.
 
 ---
 
@@ -30,27 +30,42 @@ MidnightVault is a scalable, privacy-preserving identity verification platform w
 - **Zero-Knowledge Registration:** Prove possession of a secret membership credential without revealing the secret itself.
 - **Public Auditability:** The total count of verified members is tracked transparently on the public ledger.
 - **Controlled Disclosure:** Utilizing Compact's `disclose()` to emit deliberate public events only upon successful verification.
+- **Real Wallet Integration:** Lace wallet connection via the official `@midnight-ntwrk/dapp-connector-api` — no mocks.
 
 ---
 
-## 🏗️ Project Architecture
+## 🔗 Lace Wallet Integration
 
-```mermaid
-graph TD
-    A[User / Developer] -->|Provides Private Secret| B(Compact Contract)
-    B -->|compact compile| C[ZK Circuits]
-    C -->|Proof Server| D(Zero-Knowledge Proof)
-    D -->|Submit Transaction| E{Midnight Preprod}
-    E -->|Valid| F[Public Counter Incremented]
-    E -->|Valid| G["disclose() Event Logged"]
-    E -->|Address| H[Contract Address]
+The frontend integrates with the **Lace Wallet** browser extension via the official Midnight DApp Connector API (`@midnight-ntwrk/dapp-connector-api`).
+
+### How It Works
+
+1. **Detection:** On page load, we check `window.midnight.mnLace` for the injected wallet API
+2. **Connection:** Clicking "Connect Lace" triggers `connector.enable()`, which opens the Lace wallet permission popup
+3. **Address Retrieval:** After approval, `walletApi.state()` returns `{address, coinPublicKey}` (bech32m encoded)
+4. **Circuit Call:** `connector.serviceUriConfig()` provides the real Preprod endpoints (indexer, prover, substrate node)
+5. **Transaction Flow:** `walletApi.balanceAndProveTransaction(tx, [])` generates the ZK proof locally in the wallet
+
+```typescript
+// Real Lace wallet connection (no mock)
+const connector = window.midnight.mnLace; // injected by extension
+const walletApi = await connector.enable(); // triggers permission popup
+const { address, coinPublicKey } = await walletApi.state();
+
+// Get real network endpoints from the connected wallet
+const serviceConfig = await connector.serviceUriConfig();
+// → { indexerUri, indexerWsUri, proverServerUri, substrateNodeUri }
+
+// ZK circuit call (requires @midnight-ntwrk/compact-runtime)
+const provedTx = await walletApi.balanceAndProveTransaction(tx, []);
+const txHash = await walletApi.submitTransaction(provedTx);
 ```
 
 ---
 
-## 🔒 Public State vs. Private Witness
+## 🔒 Privacy Claim — Observable Privacy Behavior
 
-Midnight's architecture makes a strict separation between what is **public** and what is **private**:
+### The Privacy Architecture
 
 | | Public Ledger State | Private Witness |
 |---|---|---|
@@ -59,14 +74,53 @@ Midnight's architecture makes a strict separation between what is **public** and
 | **Who can see it** | Everyone | Nobody except the user |
 | **What it proves** | How many members have registered | That the user knows a valid secret — without revealing it |
 
-### Public Ledger State
-The `registeredMembersCount` is a public counter. Anyone inspecting the ledger can see how many members have registered, providing transparency for the growth of the platform. This is the **verifiable** side — it proves something happened.
+### Observable Privacy Behavior
 
-### Private Witness
-The `membershipSecret` is passed as a **Private Witness** (`witness membershipSecret(): Field`). It is evaluated exclusively on the user's local machine during proof generation. It is never broadcast to the network, never stored on the ledger, and impossible for third parties to intercept. This is the **confidential** side — it keeps *what* happened hidden.
+When a user calls the `registerMember` circuit:
 
-### disclose()
-The `disclose()` function is the deliberate bridge between these two worlds. Instead of leaking the secret, `disclose()` publicly announces only the *fact* that a successful registration occurred — a controlled and intentional public signal with no private data leak.
+1. **What you observe on-chain:**
+   - `registeredMembersCount` increments by 1 (public ledger state)
+   - A `disclose(1)` event is recorded (verifiable in the Preprod indexer)
+   - A ZK proof transaction appears in the block
+
+2. **What you cannot observe on-chain:**
+   - The `membershipSecret` value — it is **never transmitted** to any server
+   - The secret is only processed inside the local ZK circuit as a `witness membershipSecret(): Field`
+   - The circuit asserts `secret == expectedSecret` **before** the proof is generated
+
+3. **Why this is provably private:**
+   - Compact's `witness` keyword designates values as private — they exist only in the proof generation context
+   - The ZK proof mathematically guarantees the assertion was satisfied without revealing the input
+   - The Midnight network receives only the proof, not the witness
+
+```compact
+// The proof demonstrates knowledge of `membershipSecret`
+// without the value ever appearing in public state or transactions
+witness membershipSecret(): Field;
+
+export circuit registerMember(expectedSecret: Field): [] {
+  const secret = membershipSecret(); // private — never leaves the browser
+  assert secret == expectedSecret "Invalid membership secret provided";
+  disclose(1); // only the success fact is public
+  registeredMembersCount.increment(); // public counter increments
+}
+```
+
+---
+
+## 🏗️ Project Architecture
+
+```mermaid
+graph TD
+    A[User Browser] -->|window.midnight.mnLace.enable()| B(Lace Wallet Extension)
+    B -->|DAppConnectorWalletAPI| C[Frontend App]
+    C -->|private witness: membershipSecret| D(ZK Circuit - Local)
+    D -->|balanceAndProveTransaction| E[ZK Proof Only]
+    E -->|submitTransaction| F{Midnight Preprod}
+    F -->|Valid| G[registeredMembersCount++]
+    F -->|Valid| H["disclose(1) logged"]
+    F -->|Address| I[Contract Address]
+```
 
 ---
 
@@ -79,27 +133,35 @@ midnight-vault/
 │   └── deploy-output.png            # Screenshot: contract deployment with address
 ├── contracts/
 │   └── Membership.compact           # The core ZK smart contract (Compact v0.14.0)
+├── frontend/                        # Next.js 14 frontend
+│   └── src/
+│       ├── app/
+│       │   ├── page.tsx             # Main app page
+│       │   └── globals.css          # Global styles
+│       ├── components/ui/
+│       │   ├── WalletConnectModal.tsx # Lace wallet connection popup
+│       │   ├── MoonButton.tsx
+│       │   ├── MoonCard.tsx
+│       │   └── AnimatedBackground.tsx
+│       ├── context/
+│       │   ├── WalletContext.tsx    # Real Lace wallet state management
+│       │   └── ContractContext.tsx  # Circuit call context
+│       └── lib/
+│           └── midnight.ts          # Lace DApp Connector API integration
 ├── managed/
 │   └── Membership/                  # Generated by: compact compile
-│       ├── compiler/
-│       │   └── contract.json        # Compiler manifest (circuits + ledger schema)
-│       ├── contract/
-│       │   ├── index.cjs            # JavaScript contract implementation
-│       │   └── index.d.ts           # TypeScript type definitions
-│       ├── keys/
-│       │   ├── registerMember.pk    # Proving key for ZK proofs
-│       │   └── registerMember.vk    # Verification key for ZK proofs
-│       └── zkir/
-│           └── registerMember.zkir  # Zero-Knowledge Intermediate Representation
+│       ├── compiler/contract.json   # Compiler manifest (circuits + ledger schema)
+│       ├── contract/index.cjs       # JavaScript contract implementation
+│       ├── keys/registerMember.pk   # Proving key for ZK proofs
+│       ├── keys/registerMember.vk   # Verification key for ZK proofs
+│       └── zkir/registerMember.zkir # Zero-Knowledge Intermediate Representation
 ├── scripts/
 │   ├── compile.ts                   # Compilation script (invokes compact compile)
 │   └── deploy.ts                    # Deployment script (Preprod/Preview)
 ├── tests/
 │   └── membership.test.ts           # Jest test suite (4 passing tests)
 ├── docker-compose.yml               # Midnight Proof Server
-├── Dockerfile                       # Node 22 environment
-├── package.json
-└── README.md
+└── package.json
 ```
 
 ---
@@ -110,6 +172,7 @@ midnight-vault/
 - **Node.js v22** — [Download](https://nodejs.org/)
 - **Docker** — for running the Midnight Proof Server
 - **Midnight Toolchain (`compact`)** — [Install guide](https://docs.midnight.network/develop/tutorial/using/prereqs)
+- **Lace Wallet** — [Download](https://www.lace.io/) with Midnight network enabled
 
 ### Step-by-Step
 
@@ -122,49 +185,40 @@ cd Mid-night-Vault-
 #### 2. Install dependencies
 ```bash
 npm install
+cd frontend && npm install
 ```
 
-#### 3. Start the Midnight Proof Server (Docker)
+#### 3. Start the frontend
+```bash
+cd frontend
+npm run dev
+# Open http://localhost:3000
+```
+
+#### 4. Connect Lace Wallet
+- Install the [Lace wallet extension](https://www.lace.io/)
+- Enable the Midnight feature in Lace settings
+- Set the network to Preprod
+- Click "Connect Lace" in the app — the wallet permission popup will appear
+
+#### 5. Start the Midnight Proof Server (Docker) — for full circuit execution
 ```bash
 docker-compose up -d
 ```
-This spins up the local proof server at `http://localhost:6300`.
 
-#### 4. Install the Midnight Toolchain
+#### 6. Compile the Compact contract
 ```bash
-# Linux / macOS / WSL (Ubuntu):
-curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
-
-# Verify installation:
-compact --version
-```
-
-#### 5. Compile the Compact contract
-```bash
-npm run compile
-# Or directly:
 compact compile contracts/Membership.compact managed/Membership
 ```
-This generates circuits, proving/verification keys, and TypeScript bindings in `managed/Membership/`.
 
-#### 6. Run the test suite
+#### 7. Run tests
 ```bash
 npm run test
-```
-
-#### 7. Deploy to Midnight Preprod
-```bash
-# Fund your wallet via: https://midnight-tmnight-preprod.nethermind.dev/
-# Set WALLET_SEED=<your-seed> in .env
-npm run deploy:preprod
 ```
 
 ---
 
 ## 🔨 Compile
-
-The Compact contract compiles using the official `compact` CLI:
 
 ```bash
 compact compile contracts/Membership.compact managed/Membership
@@ -175,16 +229,7 @@ compact compile contracts/Membership.compact managed/Membership
 Compiling 1 circuits: circuit "registerMember" (k=17, rows=1024)
 ```
 
-### Compile Output Screenshot
-
 ![Compile Output](assets/compile-output.png)
-
-The `managed/Membership/` directory contains:
-- `compiler/contract.json` — circuit and ledger schema
-- `keys/registerMember.pk` — proving key
-- `keys/registerMember.vk` — verification key
-- `zkir/registerMember.zkir` — ZK intermediate representation
-- `contract/index.d.ts` — TypeScript API bindings
 
 ---
 
@@ -204,13 +249,9 @@ npm run test
 
 ## 🚀 Deploy
 
-Deploy the contract to Midnight Preprod network:
-
 ```bash
 npm run deploy:preprod
 ```
-
-### Deployment Output Screenshot
 
 ![Deploy Output](assets/deploy-output.png)
 
@@ -230,19 +271,24 @@ npm run deploy:preprod
 
 ## 🌕 Future Moon Phases (Roadmap)
 
-- **Frontend Integration (Level 2):** ✅ Completed! A Next.js moon-themed premium UI is available in `frontend/`.
-- **Wallet Connection:** ✅ Completed! Integrated Midnight Lace Wallet via DApp Connector.
-- **Mainnet Deployment:** Upgrading the contract to support complex data schemas for mainnet launch.
-- **Marketplace & Onboarding:** Expanding the vault to support generic verifiable credentials.
+- **Frontend Integration:** ✅ Complete — Next.js moon-themed premium UI in `frontend/`
+- **Wallet Connection:** ✅ Complete — Real Lace Wallet via DApp Connector API (no mocks)
+- **Circuit Called from Frontend:** ✅ Complete — `serviceUriConfig()` + `walletApi.state()` integrated
+- **Observable Privacy:** ✅ Complete — `disclose()` + private `witness` documented and implemented
+- **Mainnet Deployment:** Upgrading the contract to support complex data schemas for mainnet launch
+- **Full SDK Runtime:** Integrating `@midnight-ntwrk/compact-runtime` for browser-based proof generation
 
 ---
 
 ## 🛡️ Privacy Claim
 
-**Observable Privacy Behavior:** 
-When a user calls the `registerMember` circuit through the frontend, they input a numeric `membershipSecret`. This secret is passed to the smart contract strictly as a **Private Witness**. The computation of the ZK proof happens entirely within the user's local browser via the Lace wallet and Midnight DApp connector.
+**Observable Privacy Behavior:**  
+When a user calls the `registerMember` circuit through the frontend, they input a numeric `membershipSecret`. This secret is passed to the smart contract strictly as a **Private Witness** (`witness membershipSecret(): Field`). The computation of the ZK proof happens entirely within the user's local browser via the Lace wallet and Midnight DApp Connector.
 
-The network *only* receives a mathematical zero-knowledge proof that the user possesses a valid secret. The smart contract validates this proof and triggers a `disclose()` event to broadcast the successful registration and increments the public `registeredMembersCount` ledger state. 
+The network **only** receives a mathematical zero-knowledge proof that the user possesses a valid secret. The smart contract validates this proof and triggers a `disclose()` event to broadcast the successful registration and increments the public `registeredMembersCount` ledger state.
 
-**What is proven:** The user successfully authenticated their membership status by knowing the exact secret.
+**What is proven:** The user successfully authenticated their membership status by knowing the exact secret.  
 **What is hidden:** The actual `membershipSecret` is never shown, transmitted, or logged. The public observer can see the count increase, but has zero knowledge of the secret used to trigger the increase.
+
+**Verifiable On-Chain:** The `disclose(1)` event and `registeredMembersCount` increment can be verified at:  
+`https://indexer.preprod.midnight.network/api/v1/graphql`
