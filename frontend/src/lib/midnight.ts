@@ -57,24 +57,53 @@ export const connectLace = async (): Promise<{
     );
   }
 
+  console.log('[MidnightVault] Is window.midnight.mnLace defined?', !!midnight.mnLace);
+  console.dir(midnight.mnLace);
+
   // Find the first UUID key injected by Lace (or use midnight directly)
   const keys = Object.keys(midnight);
-  const connectorKey = keys.length > 0 ? keys[0] : '__self__';
-  const connector = keys.length > 0 ? midnight[keys[0]] : midnight;
+  let connectorKey = keys.length > 0 ? keys[0] : '__self__';
+  let connector = keys.length > 0 ? midnight[keys[0]] : midnight;
+
+  // Prefer mnLace if it exists, as it is the official DAppConnectorAPI object
+  if (midnight.mnLace) {
+    connectorKey = 'mnLace';
+    connector = midnight.mnLace;
+  }
 
   if (!connector) {
     throw new Error('Lace is installed but no valid connector was found at window.midnight.');
   }
 
-  // The official SDK v3.0.0 flow: Call enable() to get the walletApi
-  if (typeof connector.enable !== 'function') {
-    console.error(`[MidnightVault] Connector at window.midnight["${connectorKey}"] does not have enable().`, connector);
-    throw new Error(`The Midnight wallet connector does not support enable(). This DApp requires SDK v3.0.0. Please check for Lace extension updates.`);
+  let walletApi: any = null;
+
+  if (typeof connector.enable === 'function') {
+    console.log(`[MidnightVault] Calling enable()...`);
+    walletApi = await connector.enable();
+  } else if (typeof connector.connect === 'function') {
+    console.log(`[MidnightVault] Connector missing enable(). Trying connect() fallback...`);
+    try {
+      // Try passing network options to satisfy Lace's internal API
+      walletApi = await connector.connect('preprod');
+    } catch (e1: any) {
+      if (e1?.message?.includes('Invalid network ID')) {
+         try {
+           walletApi = await connector.connect({ networkId: 'preprod' });
+         } catch (e2) {
+           try {
+             walletApi = await connector.connect(); // Last resort
+           } catch (e3) {
+             throw e1;
+           }
+         }
+      } else {
+         throw e1;
+      }
+    }
+  } else {
+    throw new Error(`The Midnight wallet connector does not support enable() or connect(). Please check for Lace extension updates.`);
   }
 
-  console.log(`[MidnightVault] Found valid connector at window.midnight["${connectorKey}"]. Calling enable()...`);
-  const walletApi = await connector.enable();
-  
   return { connector: connector as DAppConnectorAPI, walletApi };
 };
 
