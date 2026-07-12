@@ -77,29 +77,61 @@ export const connectLace = async (): Promise<{
 
   let walletApi: any = null;
 
-  if (typeof connector.enable === 'function') {
+  if (typeof (connector as any).enable === 'function') {
     console.log(`[MidnightVault] Calling enable()...`);
-    walletApi = await connector.enable();
-  } else if (typeof connector.connect === 'function') {
-    console.log(`[MidnightVault] Connector missing enable(). Trying connect() fallback...`);
-    try {
-      // Try passing network options to satisfy Lace's internal API
-      walletApi = await connector.connect('preprod');
-    } catch (e1: any) {
-      if (e1?.message?.includes('Invalid network ID')) {
-         try {
-           walletApi = await connector.connect({ networkId: 'preprod' });
-         } catch (e2) {
-           try {
-             walletApi = await connector.connect(); // Last resort
-           } catch (e3) {
-             throw e1;
-           }
-         }
-      } else {
-         throw e1;
+    walletApi = await (connector as any).enable();
+  } else if (typeof (connector as any).connect === 'function') {
+    console.log(`[MidnightVault] Connector missing enable(). Trying connect() fallback with various network IDs...`);
+    const validNetworks = ['testnet', 'devnet', 'qanet', 'undeployed', 'preview', 'preprod'];
+    
+    let lastError = null;
+    let connected = false;
+
+    // Try passing network options to satisfy Lace's internal API
+    for (const net of validNetworks) {
+      try {
+        console.log(`[MidnightVault] Trying connect('${net}') ...`);
+        walletApi = await (connector as any).connect(net);
+        console.log(`[MidnightVault] Successfully connected on network: ${net}`);
+        connected = true;
+        break;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[MidnightVault] connect('${net}') failed:`, err?.message || err);
       }
     }
+
+    if (!connected) {
+      // If passing strings failed, try the object format
+      for (const net of validNetworks) {
+        try {
+          console.log(`[MidnightVault] Trying connect({ networkId: '${net}' }) ...`);
+          walletApi = await (connector as any).connect({ networkId: net });
+          console.log(`[MidnightVault] Successfully connected on network: ${net}`);
+          connected = true;
+          break;
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`[MidnightVault] connect({ networkId: '${net}' }) failed:`, err?.message || err);
+        }
+      }
+    }
+
+    if (!connected) {
+      // Try no arguments as a final resort
+      try {
+        console.log(`[MidnightVault] Trying connect() with no arguments...`);
+        walletApi = await (connector as any).connect();
+        connected = true;
+      } catch (err: any) {
+        lastError = err;
+      }
+    }
+
+    if (!connected && lastError) {
+      throw lastError; // Throw the last "Network ID mismatch" or "Invalid network ID"
+    }
+
   } else {
     throw new Error(`The Midnight wallet connector does not support enable() or connect(). Please check for Lace extension updates.`);
   }
