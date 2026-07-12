@@ -45,7 +45,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
       console.log('[MidnightVault] Keys:', Object.keys(midnight));
       Object.keys(midnight).forEach(k => {
         const v = midnight[k] as any;
-        console.log(`  ["${k}"]`, v, 'state:', typeof v?.state, 'enable:', typeof v?.enable);
+        console.log(`  ["${k}"]`, v, 'enable:', typeof v?.enable);
       });
     }
     window.location.reload();

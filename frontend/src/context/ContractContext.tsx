@@ -111,15 +111,12 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
        */
 
       // Get service URIs from the connected wallet (real network endpoints)
-      // connector may be null if Lace injected the walletApi directly (UUID pattern)
-      let serviceConfig = null;
-      if (connector) {
-        try {
-          serviceConfig = await connector.serviceUriConfig();
-          console.log('[MidnightVault] Service config from Lace:', serviceConfig);
-        } catch (e) {
-          console.warn('[MidnightVault] Could not fetch serviceUriConfig:', e);
-        }
+      let serviceConfig;
+      try {
+        serviceConfig = await connector.serviceUriConfig();
+        console.log('[MidnightVault] Service config from Lace:', serviceConfig);
+      } catch (e) {
+        console.warn('[MidnightVault] Could not fetch serviceUriConfig:', e);
       }
 
       console.log('[MidnightVault] Calling registerMember circuit on contract:', PREPROD_CONTRACT_ADDRESS);
