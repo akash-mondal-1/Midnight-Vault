@@ -10,84 +10,108 @@ export type WalletState = {
 };
 
 /**
- * Finds any valid Midnight wallet object from window.midnight.
- * Handles two injection patterns from Lace:
- *   - Pattern A: connector with enable() → call enable() to get walletApi
- *   - Pattern B: walletApi injected directly (has state(), no enable())
- */
-const findMidnightObject = (): { hasEnable: boolean; obj: any } | null => {
-  if (typeof window === 'undefined') return null;
-
-  // @ts-ignore
-  const midnight = window.midnight;
-  if (!midnight || typeof midnight !== 'object') return null;
-
-  console.debug('[MidnightVault] window.midnight keys:', Object.keys(midnight));
-
-  // Check direct properties first (window.midnight.enable or window.midnight.state)
-  if (typeof midnight.enable === 'function') return { hasEnable: true, obj: midnight };
-  if (typeof midnight.state === 'function') return { hasEnable: false, obj: midnight };
-
-  // Enumerate all keys (handles UUID-based injection like abbefa01-8675-...)
-  for (const key of Object.keys(midnight)) {
-    const obj = midnight[key];
-    if (!obj || typeof obj !== 'object') continue;
-
-    console.debug(`[MidnightVault] Checking key "${key}":`, {
-      hasEnable: typeof obj.enable === 'function',
-      hasState: typeof obj.state === 'function',
-    });
-
-    if (typeof obj.enable === 'function') return { hasEnable: true, obj };
-    if (typeof obj.state === 'function') return { hasEnable: false, obj };
-  }
-
-  console.debug('[MidnightVault] No valid connector found in window.midnight');
-  return null;
-};
-
-/**
- * Returns true if a Midnight wallet is available and usable in the browser.
+ * Returns true if window.midnight has ANY entries — even if we can't yet
+ * determine the exact API shape. Err on the side of availability.
  */
 export const isMidnightWalletAvailable = (): boolean => {
-  return findMidnightObject() !== null;
+  if (typeof window === 'undefined') return false;
+  try {
+    // @ts-ignore
+    const midnight = window.midnight;
+    if (!midnight || typeof midnight !== 'object') return false;
+
+    // Has direct enable or state → definitely available
+    if (typeof midnight.enable === 'function' || typeof midnight.state === 'function') return true;
+
+    // Has any non-null key → likely available (UUID injection)
+    const keys = Object.keys(midnight);
+    if (keys.length > 0) {
+      const firstVal = midnight[keys[0]];
+      // Return true as long as something is injected
+      return firstVal !== null && firstVal !== undefined;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 };
 
 /**
- * Connects to the Midnight Lace wallet.
+ * Connects to the Midnight wallet.
  *
- * Lace can inject in two ways:
- *   1. DAppConnectorAPI (has enable()) → call enable() to get walletApi
- *   2. DAppConnectorWalletAPI directly (has state()) → use as-is
- *
- * Returns both connector (may be null) and walletApi.
+ * Lace injects window.midnight["UUID"] = MidnightWalletApi directly.
+ * That object has state() but NOT enable(). We detect both cases.
  */
 export const connectLace = async (): Promise<{
   connector: DAppConnectorAPI | null;
   walletApi: DAppConnectorWalletAPI;
 }> => {
   if (typeof window === 'undefined') {
-    throw new Error('Window is not defined. This must run in a browser.');
+    throw new Error('Must run in browser');
   }
 
-  const found = findMidnightObject();
+  // @ts-ignore
+  const midnight = window.midnight;
 
-  if (!found) {
+  if (!midnight || typeof midnight !== 'object') {
     throw new Error(
-      'Midnight wallet not found. Please install the Lace wallet extension and enable the Midnight feature in Settings → Experiments.'
+      'Midnight wallet not found. Please install Lace and enable the Midnight feature in Settings → Experiments.'
     );
   }
 
-  if (found.hasEnable) {
-    // Standard DApp Connector API — call enable() to trigger permission popup
-    console.debug('[MidnightVault] Calling connector.enable()...');
-    const walletApi: DAppConnectorWalletAPI = await found.obj.enable();
-    return { connector: found.obj as DAppConnectorAPI, walletApi };
-  } else {
-    // Wallet API already injected directly — no enable() needed
-    console.debug('[MidnightVault] Using directly-injected wallet API (no enable() needed)');
-    return { connector: null, walletApi: found.obj as DAppConnectorWalletAPI };
+  // Collect all candidates: midnight itself + all its values
+  const candidates: Array<{ key: string; val: any }> = [
+    { key: '__self__', val: midnight },
+    ...Object.keys(midnight).map(k => ({ key: k, val: midnight[k] })),
+  ];
+
+  console.log('[MidnightVault] connectLace: candidates', candidates.map(c => ({
+    key: c.key,
+    hasEnable: typeof c.val?.enable === 'function',
+    hasState: typeof c.val?.state === 'function',
+    protoState: typeof Object.getPrototypeOf(c.val ?? {})?.state,
+    type: typeof c.val,
+  })));
+
+  for (const { key, val } of candidates) {
+    if (!val || typeof val !== 'object') continue;
+
+    // Pattern A: has enable() → DAppConnectorAPI — call enable() to get walletApi
+    if (typeof val.enable === 'function') {
+      console.log(`[MidnightVault] Pattern A: enable() found at "${key}"`);
+      const walletApi: DAppConnectorWalletAPI = await val.enable();
+      return { connector: val as DAppConnectorAPI, walletApi };
+    }
+
+    // Pattern B: has state() directly — already the walletApi
+    if (typeof val.state === 'function') {
+      console.log(`[MidnightVault] Pattern B: state() found at "${key}" — using directly`);
+      return { connector: null, walletApi: val as DAppConnectorWalletAPI };
+    }
+
+    // Pattern C: check prototype chain for state (class instance)
+    const proto = Object.getPrototypeOf(val);
+    if (proto && typeof proto.state === 'function') {
+      console.log(`[MidnightVault] Pattern C: state() on prototype at "${key}"`);
+      return { connector: null, walletApi: val as DAppConnectorWalletAPI };
+    }
+
+    // Pattern D: try calling state() blindly — Proxy objects may hide methods
+    try {
+      const stateResult = await val.state?.();
+      if (stateResult && (stateResult.address || stateResult.coinPublicKey)) {
+        console.log(`[MidnightVault] Pattern D: val.state() worked blindly at "${key}"`);
+        return { connector: null, walletApi: val as DAppConnectorWalletAPI };
+      }
+    } catch {
+      // not this one
+    }
   }
+
+  throw new Error(
+    'Lace is installed but the Midnight connector API could not be accessed. ' +
+    'Please ensure the Midnight feature is enabled in Lace Settings → Experiments, then reload.'
+  );
 };
 
 /**
@@ -97,9 +121,9 @@ export const getWalletState = async (
   walletApi: DAppConnectorWalletAPI
 ): Promise<{ address: string; coinPublicKey: string }> => {
   const state = await walletApi.state();
-  console.debug('[MidnightVault] Wallet state:', state);
+  console.log('[MidnightVault] Wallet state received:', state);
   return {
-    address: state.address,
-    coinPublicKey: state.coinPublicKey,
+    address: (state as any).address ?? (state as any).midnight?.address ?? 'unknown',
+    coinPublicKey: (state as any).coinPublicKey ?? (state as any).midnight?.coinPublicKey ?? 'unknown',
   };
 };

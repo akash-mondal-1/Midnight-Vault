@@ -15,7 +15,25 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
   const { connectWallet, isConnected, isWalletAvailable, error } = useWallet();
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [retryCount, setRetryCount] = React.useState(0);
+  const [hasMidnightInjection, setHasMidnightInjection] = React.useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Direct client-side check for window.midnight injection (bypasses React state timing)
+  React.useEffect(() => {
+    const checkInjection = () => {
+      // @ts-ignore
+      const midnight = window?.midnight;
+      const has = !!(midnight && typeof midnight === 'object' && Object.keys(midnight).length > 0);
+      setHasMidnightInjection(has);
+      if (has) {
+        // @ts-ignore
+        console.log('[MidnightVault] Direct injection check — keys:', Object.keys(window.midnight));
+      }
+    };
+    checkInjection();
+    const t = setInterval(checkInjection, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   // Force re-check wallet availability
   const retryDetection = useCallback(() => {
@@ -26,14 +44,12 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
     if (midnight) {
       console.log('[MidnightVault] Keys:', Object.keys(midnight));
       Object.keys(midnight).forEach(k => {
-        console.log(`  ["${k}"]`, midnight[k], 'enable:', typeof midnight[k]?.enable);
+        const v = midnight[k] as any;
+        console.log(`  ["${k}"]`, v, 'state:', typeof v?.state, 'enable:', typeof v?.enable);
       });
-    } else {
-      console.log('[MidnightVault] window.midnight is NOT injected');
     }
     window.location.reload();
   }, []);
-
 
   // Close on Escape key
   useEffect(() => {
@@ -131,10 +147,12 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                 </button>
               </div>
 
-              {/* Wallet Option */}
-              {isWalletAvailable ? (
+              {/* Wallet Option — always show connect button if ANY midnight injection detected */}
+              {(isWalletAvailable || hasMidnightInjection) ? (
                 <div className="space-y-3 mb-6">
-                  <p className="text-xs text-silver/50 uppercase tracking-widest mb-4">Available Wallet</p>
+                  <p className="text-xs text-silver/50 uppercase tracking-widest mb-4">
+                    {hasMidnightInjection && !isWalletAvailable ? 'Wallet Detected' : 'Available Wallet'}
+                  </p>
                   <button
                     id="lace-connect-btn"
                     onClick={handleConnect}
