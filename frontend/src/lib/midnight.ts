@@ -11,33 +11,50 @@ export type WalletState = {
 
 /**
  * Detects available Midnight wallets injected into window.midnight.
- * Checks that the connector actually has an enable() function.
- * Handles UUID-based key injection used by newer Lace versions.
+ * Handles all known injection patterns from Lace wallet versions.
  */
 export const detectMidnightWallet = (): DAppConnectorAPI | null => {
   if (typeof window === 'undefined') return null;
 
-  // @ts-ignore - window.midnight is injected by Lace wallet extension
+  // @ts-ignore
   const midnight = window.midnight;
-  if (!midnight || typeof midnight !== 'object') return null;
+  if (!midnight) {
+    console.debug('[MidnightVault] window.midnight is not defined');
+    return null;
+  }
 
-  // Check mnLace first — but verify it actually has enable()
+  console.debug('[MidnightVault] window.midnight found:', Object.keys(midnight));
+
+  // Pattern 1: window.midnight itself is the DAppConnectorAPI
+  if (typeof midnight.enable === 'function') {
+    console.debug('[MidnightVault] Using window.midnight directly as connector');
+    return midnight as DAppConnectorAPI;
+  }
+
+  // Pattern 2: window.midnight.mnLace (standard Lace injection)
   if (midnight.mnLace && typeof midnight.mnLace.enable === 'function') {
+    console.debug('[MidnightVault] Using window.midnight.mnLace');
     return midnight.mnLace as DAppConnectorAPI;
   }
 
-  // Enumerate ALL keys — Lace may inject under a UUID-based key in newer versions
+  // Pattern 3: Enumerate all keys for UUID-based or unknown key injection
   for (const key of Object.keys(midnight)) {
     const wallet = midnight[key];
     if (wallet && typeof wallet === 'object' && typeof wallet.enable === 'function') {
+      console.debug(`[MidnightVault] Found connector at window.midnight["${key}"]`);
       return wallet as DAppConnectorAPI;
     }
   }
 
-  // Last resort: if something is injected but enable isn't a function yet
-  // (extension still loading), return null so user retries
+  // Log what's actually there so we can debug
+  console.debug('[MidnightVault] window.midnight exists but no connector found. Keys:', Object.keys(midnight));
+  try {
+    console.debug('[MidnightVault] window.midnight value:', JSON.stringify(midnight, null, 2));
+  } catch { /* ignore circular refs */ }
+
   return null;
 };
+
 
 /**
  * Returns true if a Midnight-compatible wallet is available in the browser.

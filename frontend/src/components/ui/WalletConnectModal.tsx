@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, AlertCircle, Loader2 } from 'lucide-react';
+import { X, ExternalLink, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { MoonButton } from './MoonButton';
 import { useWallet } from '@/context/WalletContext';
 
@@ -14,7 +14,26 @@ interface WalletConnectModalProps {
 export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps) => {
   const { connectWallet, isConnected, isWalletAvailable, error } = useWallet();
   const [isConnecting, setIsConnecting] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Force re-check wallet availability
+  const retryDetection = useCallback(() => {
+    setRetryCount(c => c + 1);
+    // @ts-ignore
+    const midnight = window?.midnight;
+    console.log('[MidnightVault] Manual debug — window.midnight:', midnight);
+    if (midnight) {
+      console.log('[MidnightVault] Keys:', Object.keys(midnight));
+      Object.keys(midnight).forEach(k => {
+        console.log(`  ["${k}"]`, midnight[k], 'enable:', typeof midnight[k]?.enable);
+      });
+    } else {
+      console.log('[MidnightVault] window.midnight is NOT injected');
+    }
+    window.location.reload();
+  }, []);
+
 
   // Close on Escape key
   useEffect(() => {
@@ -155,11 +174,11 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                   <div className="p-4 rounded-2xl bg-white/3 border border-white/10 space-y-3">
                     <p className="text-xs text-silver/60 uppercase tracking-widest mb-2">How to enable Midnight in Lace</p>
                     {[
-                      "Open Lace extension → click the ⚙️ Settings icon",
-                      "Go to Settings → Experiments (or Beta features)",
-                      'Enable "Midnight" or "Midnight dApp connector"',
-                      "Switch network to Preprod in Lace settings",
-                      "Reload this page and try again",
+                      "Open Lace extension → click ⚙️ Settings",
+                      "Settings → Experiments → Enable Midnight dApp connector",
+                      "In Midnight Settings: select Remote proof server",
+                      "Set network to Preview (Testnet) in Lace",
+                      "Click 'Reload & Retry' button below",
                     ].map((step, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <div className="w-5 h-5 rounded-full bg-soft-indigo/30 border border-soft-indigo/50 flex items-center justify-center flex-shrink-0 text-[10px] text-moon-white font-medium">
@@ -170,18 +189,15 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                     ))}
                   </div>
 
-                  <div className="flex gap-3 mt-3">
-                    <a
-                      href="https://www.lace.io/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      id="lace-install-link"
-                      className="inline-flex items-center gap-1.5 text-xs text-amber-300 hover:text-amber-100 transition-colors"
+                  <div className="flex items-center gap-3 mt-3">
+                    <button
+                      onClick={retryDetection}
+                      id="retry-detect-btn"
+                      className="inline-flex items-center gap-1.5 text-xs bg-soft-indigo/20 hover:bg-soft-indigo/40 border border-soft-indigo/40 text-moon-white px-3 py-1.5 rounded-full transition-colors"
                     >
-                      Get Lace Wallet
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                    <span className="text-silver/20">·</span>
+                      <RefreshCw className="w-3 h-3" />
+                      Reload &amp; Retry
+                    </button>
                     <a
                       href="https://docs.midnight.network/develop/tutorial/using/prereqs"
                       target="_blank"
