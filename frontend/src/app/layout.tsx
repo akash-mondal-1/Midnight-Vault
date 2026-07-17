@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { WalletProvider } from "@/context/WalletContext";
-import { ContractProvider } from "@/context/ContractContext";
-import { AnimatedBackground } from "@/components/ui/AnimatedBackground";
-import { ExtensionErrorSuppressor } from "@/components/ui/ExtensionErrorSuppressor";
+import { ClientProviders } from "@/components/ClientProviders";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Midnight Vault | Privacy Lives Here",
-  description: "Privacy-preserving identity verification platform using Midnight Compact.",
+  description: "Privacy-preserving identity verification platform using Midnight Compact. Prove membership without revealing your secret.",
 };
 
 export default function RootLayout({
@@ -21,13 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ExtensionErrorSuppressor />
-        <AnimatedBackground />
-        <WalletProvider>
-          <ContractProvider>
-            {children}
-          </ContractProvider>
-        </WalletProvider>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

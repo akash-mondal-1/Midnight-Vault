@@ -1,155 +1,98 @@
-import type { DAppConnectorAPI, DAppConnectorWalletAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { InitialAPI, ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 
 export type WalletState = {
   isConnected: boolean;
   address: string | null;
   coinPublicKey: string | null;
   error: string | null;
-  connector: DAppConnectorAPI | null;
-  walletApi: DAppConnectorWalletAPI | null;
+  connector: InitialAPI | null;
+  walletApi: ConnectedAPI | null;
 };
 
 /**
- * Returns true if window.midnight has ANY entries.
+ * Enumerates window.midnight to find a wallet connector with a connect function.
+ * The DApp connector API defines: window.midnight = { [key: string]: InitialAPI }
  */
-export const isMidnightWalletAvailable = (): boolean => {
-  if (typeof window === 'undefined') return false;
+export const getLaceConnector = (): InitialAPI | null => {
+  if (typeof window === 'undefined' || !(window as any).midnight) return null;
+
   try {
-    // @ts-ignore
-    const midnight = window.midnight;
-    if (!midnight || typeof midnight !== 'object') return false;
+    const midnight = (window as any).midnight;
+    const connectors = Object.values(midnight).filter(
+      (c: any) => c && typeof c === 'object' && typeof c.connect === 'function'
+    ) as InitialAPI[];
 
-    // Has direct enable → available
-    if (typeof midnight.enable === 'function') return true;
+    if (connectors.length === 0) return null;
 
-    // Has any non-null key → likely available (UUID injection)
-    const keys = Object.keys(midnight);
-    if (keys.length > 0) {
-      const firstVal = midnight[keys[0]];
-      return firstVal !== null && firstVal !== undefined;
-    }
-    return false;
+    // Find the Lace connector specifically by rdns or name
+    const laceConnector = connectors.find(
+      (c) => c.rdns?.includes('lace') || c.name?.toLowerCase().includes('lace')
+    );
+
+    return laceConnector || connectors[0];
   } catch {
-    return false;
+    return null;
   }
 };
 
 /**
- * Connects to the Midnight wallet.
- *
- * For SDK v3, the flow is:
- * window.midnight -> UUID -> enable() -> walletApi -> state()
+ * Returns true if a Midnight wallet connector is available.
  */
-export const connectLace = async (): Promise<{
-  connector: DAppConnectorAPI;
-  walletApi: DAppConnectorWalletAPI;
+export const isMidnightWalletAvailable = (): boolean => {
+  return getLaceConnector() !== null;
+};
+
+/**
+ * Connects to the Lace wallet.
+ * Network ID should match what Lace is configured to:
+ *   - 'testnet' for Midnight Preview/Preprod
+ *   - 'mainnet' for production
+ */
+export const connectLace = async (
+  networkId: string = 'preview'
+): Promise<{
+  connector: InitialAPI;
+  walletApi: ConnectedAPI;
 }> => {
   if (typeof window === 'undefined') {
     throw new Error('Must run in browser');
   }
 
-  // @ts-ignore
-  const midnight = window.midnight;
-
-  if (!midnight || typeof midnight !== 'object') {
+  const connector = getLaceConnector();
+  if (!connector) {
     throw new Error(
       'Midnight wallet not found. Please install Lace and enable the Midnight feature in Settings → Experiments.'
     );
   }
 
-  console.log('[MidnightVault] Is window.midnight.mnLace defined?', !!midnight.mnLace);
-  console.dir(midnight.mnLace);
-
-  // Find the first UUID key injected by Lace (or use midnight directly)
-  const keys = Object.keys(midnight);
-  let connectorKey = keys.length > 0 ? keys[0] : '__self__';
-  let connector = keys.length > 0 ? midnight[keys[0]] : midnight;
-
-  // Prefer mnLace if it exists, as it is the official DAppConnectorAPI object
-  if (midnight.mnLace) {
-    connectorKey = 'mnLace';
-    connector = midnight.mnLace;
+  console.log(`[MidnightVault] Connecting to wallet ${connector.name} (${connector.rdns}) on network: ${networkId}`);
+  
+  try {
+    const walletApi = await connector.connect(networkId);
+    console.log('[MidnightVault] ✓ Wallet connected successfully');
+    return { connector, walletApi };
+  } catch (err: any) {
+    // Handle specific error codes from the DApp connector
+    if (err?.code === 'USER_REJECTED' || err?.message?.includes('rejected')) {
+      throw new Error('Connection rejected by user. Please approve in Lace.');
+    }
+    if (err?.code === 'NETWORK_MISMATCH' || err?.message?.includes('network')) {
+      throw new Error('Network mismatch. Please switch Lace to the Midnight testnet.');
+    }
+    throw err;
   }
-
-  if (!connector) {
-    throw new Error('Lace is installed but no valid connector was found at window.midnight.');
-  }
-
-  let walletApi: any = null;
-
-  if (typeof (connector as any).enable === 'function') {
-    console.log(`[MidnightVault] Calling enable()...`);
-    walletApi = await (connector as any).enable();
-  } else if (typeof (connector as any).connect === 'function') {
-    console.log(`[MidnightVault] Connector missing enable(). Trying connect() fallback with various network IDs...`);
-    const validNetworks = ['testnet', 'devnet', 'qanet', 'undeployed', 'preview', 'preprod'];
-    
-    let lastError = null;
-    let connected = false;
-
-    // Try passing network options to satisfy Lace's internal API
-    for (const net of validNetworks) {
-      try {
-        console.log(`[MidnightVault] Trying connect('${net}') ...`);
-        walletApi = await (connector as any).connect(net);
-        console.log(`[MidnightVault] Successfully connected on network: ${net}`);
-        connected = true;
-        break;
-      } catch (err: any) {
-        lastError = err;
-        console.warn(`[MidnightVault] connect('${net}') failed:`, err?.message || err);
-      }
-    }
-
-    if (!connected) {
-      // If passing strings failed, try the object format
-      for (const net of validNetworks) {
-        try {
-          console.log(`[MidnightVault] Trying connect({ networkId: '${net}' }) ...`);
-          walletApi = await (connector as any).connect({ networkId: net });
-          console.log(`[MidnightVault] Successfully connected on network: ${net}`);
-          connected = true;
-          break;
-        } catch (err: any) {
-          lastError = err;
-          console.warn(`[MidnightVault] connect({ networkId: '${net}' }) failed:`, err?.message || err);
-        }
-      }
-    }
-
-    if (!connected) {
-      // Try no arguments as a final resort
-      try {
-        console.log(`[MidnightVault] Trying connect() with no arguments...`);
-        walletApi = await (connector as any).connect();
-        connected = true;
-      } catch (err: any) {
-        lastError = err;
-      }
-    }
-
-    if (!connected && lastError) {
-      throw lastError; // Throw the last "Network ID mismatch" or "Invalid network ID"
-    }
-
-  } else {
-    throw new Error(`The Midnight wallet connector does not support enable() or connect(). Please check for Lace extension updates.`);
-  }
-
-  return { connector: connector as DAppConnectorAPI, walletApi };
 };
 
 /**
- * Gets address and coinPublicKey from the wallet API.
+ * Retrieves the shielded address information from the wallet API.
+ * Uses the official ConnectedAPI.getShieldedAddresses() method.
  */
 export const getWalletState = async (
-  walletApi: DAppConnectorWalletAPI
+  walletApi: ConnectedAPI
 ): Promise<{ address: string; coinPublicKey: string }> => {
-  const state = await walletApi.state();
-  
+  const state = await walletApi.getShieldedAddresses();
   return {
-    // The official interface returns these directly in state()
-    address: (state as any).address ?? 'unknown',
-    coinPublicKey: (state as any).coinPublicKey ?? 'unknown',
+    address: state.shieldedAddress,
+    coinPublicKey: state.shieldedCoinPublicKey,
   };
 };

@@ -7,7 +7,7 @@ import {
   getWalletState,
   isMidnightWalletAvailable,
 } from '@/lib/midnight';
-import type { DAppConnectorWalletAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 
 interface WalletContextType extends WalletState {
   isWalletAvailable: boolean;

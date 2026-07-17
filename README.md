@@ -1,10 +1,10 @@
 # 🌑 MidnightVault
 
 [![Node](https://img.shields.io/badge/Node-22-green)](https://nodejs.org/)
+[![Midnight CI](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml/badge.svg)](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml)
 [![Compact](https://img.shields.io/badge/Compact-0.14.0-blue)](https://docs.midnight.network/)
 [![Midnight](https://img.shields.io/badge/Midnight-Network-purple)](https://midnight.network/)
 [![Tests](https://img.shields.io/badge/Tests-4%20Passed-brightgreen)](./tests/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > A privacy-preserving identity verification platform built for the Midnight "New Moon to Full" Level 1 program.
 
@@ -22,6 +22,14 @@ MidnightVault is a scalable, privacy-preserving identity verification platform w
 **Contract Address:** `a7f3d891c4b2e056f8a913d4c7e2b089f1d3c456a7f8e9b0c1d2e3f4a5b6c7d8`
 
 > See the [deployment screenshot](#-deploy) below for proof of deployment.
+
+---
+
+## 🛡️ Privacy Model
+
+MidnightVault implements a **Private Allowlist Access** model.
+- **What an observer CAN learn (Public):** An observer looking at the blockchain can see the `registeredMembersCount` increasing, which indicates that *someone* has successfully proven their membership. They can also see the exact timestamp of the state transition.
+- **What an observer CANNOT learn (Private):** An observer cannot see the `membershipSecret` used to authenticate, nor can they link the transaction back to the user's true identity or wallet address beyond the pseudonymous Lace interaction. The ZK proof validates the credential locally without transmitting the underlying data.
 
 ---
 

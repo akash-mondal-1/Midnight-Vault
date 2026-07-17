@@ -1,4 +1,3 @@
-"use client";
 
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -21,8 +20,11 @@ export default function Home() {
     error: walletError,
   } = useWallet();
   const {
+    contractAddress,
     registeredMembersCount,
     registerMember,
+    deployNewContract,
+    isContractValid,
     isLoading,
     privacyProven,
     txHash,
@@ -50,13 +52,13 @@ export default function Home() {
 
   const handleCopyAddress = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(PREPROD_CONTRACT_ADDRESS);
+      await navigator.clipboard.writeText(contractAddress || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard not available
     }
-  }, []);
+  }, [contractAddress]);
 
   const truncateAddress = (addr: string, start = 6, end = 4) =>
     `${addr.slice(0, start)}...${addr.slice(-end)}`;
@@ -288,36 +290,56 @@ export default function Home() {
 
           {/* Contract Address */}
           <div className="border border-white/10 rounded-2xl p-4 bg-midnight-blue/20 backdrop-blur-sm">
-            <h3 className="text-silver text-xs mb-2 uppercase tracking-widest">Contract Address</h3>
+            <h3 className="text-silver text-sm mb-2 uppercase tracking-widest font-light">Contract Address</h3>
             <div className="flex items-center gap-2">
               <code className="text-xs text-moon-white/80 font-mono flex-1 truncate">
-                {truncateAddress(PREPROD_CONTRACT_ADDRESS, 16, 8)}
+                {contractAddress ? truncateAddress(contractAddress, 16, 8) : 'Not Deployed'}
               </code>
-              <button
-                onClick={handleCopyAddress}
-                id="copy-address-btn"
-                className="text-silver/40 hover:text-moon-white transition-colors p-1"
-                aria-label="Copy contract address"
-                title="Copy contract address"
-              >
-                {copied ? (
-                  <CheckCircle className="w-4 h-4 text-green-400" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
-              <a
-                href={`https://indexer.preprod.midnight.network/api/v1/graphql`}
-                target="_blank"
-                rel="noopener noreferrer"
-                id="indexer-link"
-                className="text-silver/40 hover:text-moon-white transition-colors p-1"
-                aria-label="View on Midnight Preprod Indexer"
-                title="View on Indexer"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
+              {contractAddress && (
+                <button
+                  onClick={handleCopyAddress}
+                  id="copy-address-btn"
+                  className="text-silver/40 hover:text-moon-white transition-colors p-1"
+                  aria-label="Copy contract address"
+                  title="Copy contract address"
+                >
+                  {copied ? (
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+              {contractAddress && (
+                <a
+                  href={`https://indexer.preprod.midnight.network/api/v4/graphql`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id="indexer-link"
+                  className="text-silver/40 hover:text-moon-white transition-colors p-1"
+                  aria-label="View on Midnight Preprod Indexer"
+                  title="View on Indexer"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
             </div>
+            {isContractValid === false && (
+              <div className="mt-3 text-xs text-amber-300 flex flex-col gap-2">
+                <span>⚠️ Contract not active on Preprod.</span>
+                {isConnected ? (
+                  <button
+                    onClick={deployNewContract}
+                    id="deploy-contract-btn"
+                    className="self-start underline text-moon-glow font-medium hover:text-yellow-200 transition-colors"
+                  >
+                    Deploy New Contract Instance
+                  </button>
+                ) : (
+                  <span className="text-silver/40">Connect your wallet to deploy a fresh instance.</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
