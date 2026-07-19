@@ -5,7 +5,7 @@
 [![Node](https://img.shields.io/badge/Node-22-green)](https://nodejs.org/)
 [![Compact](https://img.shields.io/badge/Compact-0.14.0-blue)](https://docs.midnight.network/)
 
-> **Private Allowlist Access** — prove membership without revealing identity. Built for Midnight "New Moon to Full" Level 2 & Level 3.
+> **Private Allowlist Access** — prove membership without revealing identity. Built on Midnight Network.
 
 **Live Demo:** https://mid-night-vault.vercel.app/
 **Demo Video:** https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L
@@ -14,13 +14,13 @@
 
 ---
 
-## ✅ Level 1 — Already Approved
+## ✅ Level 1 — New Moon (Already Approved)
 
-Level 1 (Crescent) submission was previously reviewed and approved.
+Level 1 (New Moon) submission was previously reviewed and approved.
 
 ---
 
-## 🔑 Submission Checklist — Level 2 (Crescent)
+## 🔑 Submission Checklist — Level 2 (Waxing Crescent)
 
 - [x] Lace wallet connect / disconnect implemented
 - [x] Circuit called from frontend (`registerMember` via DApp Connector API)
@@ -32,14 +32,14 @@ Level 1 (Crescent) submission was previously reviewed and approved.
 
 ---
 
-## 🔑 Submission Checklist — Level 3 (Half Moon)
+## 🔑 Submission Checklist — Level 3 (First Quarter)
 
-- [x] Fully functional dApp using Midnight's privacy model (Private Allowlist Access)
+- [x] Fully functional dApp using Midnight's privacy model
 - [x] 4 tests passing (>= 3 required) — see [Test](#-test)
-- [x] CI/CD pipeline running on every push (compile verify + test + frontend build)
-- [x] Approved idea from list: **Private Allowlist Access**
+- [x] CI/CD pipeline running on every push (artifact verify + test + frontend build)
+- [x] Approved idea from list: **Private Allowlist Access** — see [Product Proposal](#-product-proposal) below
 - [x] 41 meaningful commits (>= 10 required)
-- [x] Privacy model section documented below
+- [x] Privacy model documented — see [Privacy Model](#️-privacy-model)
 - [x] Product proposal: [`PROPOSAL.md`](./PROPOSAL.md)
 - [x] Live demo: https://mid-night-vault.vercel.app/
 - [x] Demo video: https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L
@@ -107,11 +107,11 @@ npm test
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every push to `main`:
 1. Checkout + Node.js v22 setup
 2. `npm install`
-3. Verify pre-compiled contract artifacts exist (`managed/Membership/`)
+3. Verify pre-compiled contract artifacts (`managed/Membership/`)
 4. `npm test` — 4-test Jest suite
 5. `cd frontend && npm install && npm run build`
 
-> The Compact toolchain requires a native binary not available in GitHub Actions runners. The contract is compiled locally and artifacts are committed — this is standard practice for Midnight dApps at this stage.
+> The Compact toolchain requires a native binary not available in GitHub Actions runners. The contract is compiled locally and artifacts committed — standard practice for Midnight dApps.
 
 ---
 
@@ -176,6 +176,45 @@ PROPOSAL.md                        # Product proposal: Private Allowlist Access
 
 ---
 
-## 💡 Product Idea
+## 💡 Product Proposal
 
-**Private Allowlist Access** — users prove membership in an exclusive group (DAO, NFT allowlist, DeFi protocol) without exposing their wallet address or credential on-chain. See [`PROPOSAL.md`](./PROPOSAL.md) for the full proposal.
+**Selected Idea (from approved list): Private Allowlist Access**
+
+> Prove membership without revealing identity.
+
+### The Ecosystem Gap
+
+Every Web3 allowlist today is a public list of wallet addresses. Anyone can scrape it, correlate it with on-chain activity, and deanonymize members. There is no native mechanism to gate access without creating a privacy honeypot.
+
+### What MidnightVault Solves
+
+MidnightVault lets a user prove they belong to an allowlist using a **zero-knowledge proof of secret knowledge** — the user's address, wallet, and credential are never published. Only the mathematical fact of validity is recorded on-chain.
+
+| Who | What They Learn |
+|---|---|
+| Smart contract / dApp | ✅ Valid proof received — grant access |
+| Blockchain observer | ✅ Someone proved membership (counter +1) |
+| Attacker / analyst | ❌ Nothing — no address, no secret, no identity |
+
+### Privacy Mechanism
+
+- The `membershipSecret` is declared as a **`witness`** in the Compact circuit — it never leaves the user's browser
+- The circuit asserts the secret matches server-side expectation **before** generating the proof
+- The network receives only a ZK proof; the secret is provably never transmitted
+- `disclose(1)` emits only a binary success signal — nothing more
+
+### Real-World Applications
+
+- **NFT allowlists** — prove you're on the mint list without revealing which wallet you'll use
+- **DeFi protocol access gates** — prove KYC/AML credential validity without submitting documents on-chain
+- **Private DAOs** — prove membership for governance voting without linking identity to vote
+- **Enterprise B2B** — prove partner status to trigger smart contract flows without revealing business relationships
+
+### Roadmap for Higher Levels
+
+- Replace shared secret with **Merkle-tree based membership proofs** (individual credentials, not shared secret)
+- Add **credential expiry** — time-bounded access without re-revealing identity
+- Multi-tier allowlists — prove tier level (e.g. gold/silver) without revealing which tier boundary you crossed
+- Cross-contract composability — other dApps query MidnightVault as a privacy oracle
+
+See full proposal: [`PROPOSAL.md`](./PROPOSAL.md)
