@@ -9,46 +9,41 @@ export type WalletState = {
   walletApi: ConnectedAPI | null;
 };
 
+// Network ID for Midnight Preprod
+const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preprod';
+
 /**
- * Enumerates window.midnight to find a wallet connector with a connect function.
- * The DApp connector API defines: window.midnight = { [key: string]: InitialAPI }
+ * Finds the first compatible Midnight wallet injected into window.midnight.
+ * Official detection pattern: check for 'apiVersion' property on the connector.
+ * Source: leaderboard-ref/leaderboard-ui/src/App.tsx
  */
 export const getLaceConnector = (): InitialAPI | null => {
-  if (typeof window === 'undefined' || !(window as any).midnight) return null;
+  if (typeof window === 'undefined') return null;
+  const midnight = (window as any).midnight;
+  if (!midnight || typeof midnight !== 'object') return null;
 
-  try {
-    const midnight = (window as any).midnight;
-    // DApp Connector API v3: connector must have enable() method
-    const connectors = Object.values(midnight).filter(
-      (c: any) => c && typeof c === 'object' && (
-        typeof c.enable === 'function' || typeof c.connect === 'function'
-      )
-    ) as InitialAPI[];
+  // Official pattern from Midnight reference: find by apiVersion presence
+  const found = Object.values(midnight).find(
+    (w): w is InitialAPI =>
+      !!w && typeof w === 'object' && 'apiVersion' in (w as object),
+  );
 
-    if (connectors.length === 0) return null;
-
-    // Find the Lace connector specifically by rdns or name, prefer enable()
-    const laceConnector = connectors.find(
-      (c: any) => c.rdns?.includes('lace') || c.name?.toLowerCase().includes('lace')
-    );
-
-    return laceConnector || connectors[0];
-  } catch {
-    return null;
-  }
+  return found ?? null;
 };
 
 /**
- * Returns true if a Midnight wallet connector is available.
+ * Returns true if a Midnight wallet connector is available in window.midnight.
  */
 export const isMidnightWalletAvailable = (): boolean => {
   return getLaceConnector() !== null;
 };
 
 /**
- * Connects to the Lace wallet using the official DApp Connector API v3.
- * Uses enable() which triggers the Lace permission popup.
- * Network ID: 'preprod' for Midnight Preprod testnet.
+ * Connects to the Midnight Lace wallet.
+ * Uses the official DApp Connector API: initialAPI.connect(networkId)
+ * This triggers the Lace permission popup.
+ *
+ * Source: leaderboard-ref — `const c = await walletAPI.connect(NETWORK_ID)`
  */
 export const connectLace = async (): Promise<{
   connector: InitialAPI;
@@ -61,48 +56,60 @@ export const connectLace = async (): Promise<{
   const connector = getLaceConnector();
   if (!connector) {
     throw new Error(
-      'Midnight wallet not found. Please install Lace and enable the Midnight feature in Settings → Experiments.'
+      'Midnight wallet not found. Please install Lace and enable the Midnight feature in Settings → Experiments.',
     );
   }
 
-  console.log(`[MidnightVault] Connecting via enable() — wallet: ${(connector as any).name || 'unknown'}`);
+  console.log(`[MidnightVault] Connecting via connect("${NETWORK_ID}")...`);
 
   try {
-    // DApp Connector API v3: enable() opens the Lace permission popup
-    const walletApi = await (connector as any).enable();
-    console.log('[MidnightVault] ✓ Wallet connected successfully via enable()');
+    // This is the official call — triggers the Lace popup
+    const walletApi = await connector.connect(NETWORK_ID);
+    console.log('[MidnightVault] ✓ Wallet connected successfully');
     return { connector, walletApi };
   } catch (err: any) {
-    if (err?.code === 'USER_REJECTED' || err?.message?.includes('rejected')) {
-      throw new Error('Connection rejected by user. Please approve in Lace.');
+    if (err?.message?.includes('User rejected') || err?.message?.includes('rejected')) {
+      throw new Error('Connection rejected. Please approve in Lace.');
     }
-    if (err?.code === 'NETWORK_MISMATCH' || err?.message?.includes('network')) {
-      throw new Error('Network mismatch. Please switch Lace to Midnight Preprod.');
+    if (err?.message?.includes('network') || err?.message?.includes('mismatch')) {
+      throw new Error('Network mismatch. Switch Lace to Midnight Preprod.');
     }
-    throw err;
+    throw new Error(err?.message || 'Failed to connect wallet');
   }
 };
 
 /**
- * Retrieves wallet address info from the connected API.
- * Tries state() first (DApp Connector v3), falls back to getShieldedAddresses().
+ * Retrieves the wallet address after connection.
+ * Official method: getUnshieldedAddress() → { unshieldedAddress }
+ * Falls back to getShieldedAddresses() for older API versions.
+ *
+ * Source: leaderboard-ref — `const { unshieldedAddress } = await c.getUnshieldedAddress()`
  */
 export const getWalletState = async (
-  walletApi: ConnectedAPI
+  walletApi: ConnectedAPI,
 ): Promise<{ address: string; coinPublicKey: string }> => {
+  // Try official v3 method first
   try {
-    // DApp Connector API v3 method
-    const s = await (walletApi as any).state();
+    const res = await (walletApi as any).getUnshieldedAddress();
     return {
-      address: s.address || s.shieldedAddress || '',
-      coinPublicKey: s.coinPublicKey || s.shieldedCoinPublicKey || '',
+      address: res.unshieldedAddress ?? '',
+      coinPublicKey: res.coinPublicKey ?? '',
     };
   } catch {
-    // Fallback for older API shape
-    const s = await (walletApi as any).getShieldedAddresses();
-    return {
-      address: s.shieldedAddress || '',
-      coinPublicKey: s.shieldedCoinPublicKey || '',
-    };
+    // Fallback: try state()
+    try {
+      const s = await (walletApi as any).state();
+      return {
+        address: s.address ?? s.shieldedAddress ?? '',
+        coinPublicKey: s.coinPublicKey ?? s.shieldedCoinPublicKey ?? '',
+      };
+    } catch {
+      // Final fallback: getShieldedAddresses()
+      const s = await (walletApi as any).getShieldedAddresses();
+      return {
+        address: s.shieldedAddress ?? '',
+        coinPublicKey: s.shieldedCoinPublicKey ?? '',
+      };
+    }
   }
 };
