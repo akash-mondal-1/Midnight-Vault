@@ -317,7 +317,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   id="indexer-link"
                   className="text-silver/40 hover:text-moon-white transition-colors p-1"
-                  aria-label="View on Midnight Preprod Indexer"
+                  aria-label="View on Midnight Preview Indexer"
                   title="View on Indexer"
                 >
                   <ExternalLink className="w-4 h-4" />
@@ -326,7 +326,7 @@ export default function Home() {
             </div>
             {isContractValid === false && (
               <div className="mt-3 text-xs text-amber-300 flex flex-col gap-2">
-                <span>⚠️ Contract not active on Preprod.</span>
+                <span>⚠️ Contract not active on Preview (Testnet).</span>
                 {isConnected ? (
                   <button
                     onClick={deployNewContract}
@@ -494,7 +494,7 @@ export default function Home() {
             <GitHubIcon className="w-4 h-4" />
             GitHub
           </a>
-          <span>Deployed on Preprod</span>
+          <span>Deployed on Preview (Testnet)</span>
         </div>
       </footer>
     </main>
