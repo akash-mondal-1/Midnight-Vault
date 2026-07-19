@@ -6,7 +6,7 @@ import { useWallet } from './WalletContext';
 // ── Contract Address ────────────────────────────────────────────────────
 // Deployed on Midnight Preprod — verified on-chain.
 export const PREPROD_CONTRACT_ADDRESS =
-  import.meta.env.VITE_CONTRACT_ADDRESS ||
+  (import.meta as any).env?.VITE_CONTRACT_ADDRESS ||
   'mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64';
 
 // ── Network Config ──────────────────────────────────────────────────────
