@@ -1,4 +1,4 @@
-﻿# 🌑 MidnightVault
+# 🌑 MidnightVault
 
 [![Midnight CI](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml/badge.svg)](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/Tests-4%20Passed-brightgreen)](./tests/)
@@ -124,7 +124,7 @@ npm run deploy:preprod
 
 **Preprod Wallet:** `mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64`
 **tNight Balance:** 5,000 tNight (claimed from faucet)
-**Indexer:** https://indexer.preprod.midnight.network/api/v1/graphql
+**Indexer:** https://indexer.preprod.midnight.network/api/v4/graphql
 
 ![Deploy Output](assets/deploy-output.png)
 ![Compile Output](assets/compile-output.png)

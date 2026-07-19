@@ -18,15 +18,18 @@ export const getLaceConnector = (): InitialAPI | null => {
 
   try {
     const midnight = (window as any).midnight;
+    // DApp Connector API v3: connector must have enable() method
     const connectors = Object.values(midnight).filter(
-      (c: any) => c && typeof c === 'object' && typeof c.connect === 'function'
+      (c: any) => c && typeof c === 'object' && (
+        typeof c.enable === 'function' || typeof c.connect === 'function'
+      )
     ) as InitialAPI[];
 
     if (connectors.length === 0) return null;
 
-    // Find the Lace connector specifically by rdns or name
+    // Find the Lace connector specifically by rdns or name, prefer enable()
     const laceConnector = connectors.find(
-      (c) => c.rdns?.includes('lace') || c.name?.toLowerCase().includes('lace')
+      (c: any) => c.rdns?.includes('lace') || c.name?.toLowerCase().includes('lace')
     );
 
     return laceConnector || connectors[0];
@@ -43,14 +46,11 @@ export const isMidnightWalletAvailable = (): boolean => {
 };
 
 /**
- * Connects to the Lace wallet.
- * Network ID should match what Lace is configured to:
- *   - 'testnet' for Midnight Preview/Preprod
- *   - 'mainnet' for production
+ * Connects to the Lace wallet using the official DApp Connector API v3.
+ * Uses enable() which triggers the Lace permission popup.
+ * Network ID: 'preprod' for Midnight Preprod testnet.
  */
-export const connectLace = async (
-  networkId: string = 'preview'
-): Promise<{
+export const connectLace = async (): Promise<{
   connector: InitialAPI;
   walletApi: ConnectedAPI;
 }> => {
@@ -65,34 +65,44 @@ export const connectLace = async (
     );
   }
 
-  console.log(`[MidnightVault] Connecting to wallet ${connector.name} (${connector.rdns}) on network: ${networkId}`);
-  
+  console.log(`[MidnightVault] Connecting via enable() — wallet: ${(connector as any).name || 'unknown'}`);
+
   try {
-    const walletApi = await connector.connect(networkId);
-    console.log('[MidnightVault] ✓ Wallet connected successfully');
+    // DApp Connector API v3: enable() opens the Lace permission popup
+    const walletApi = await (connector as any).enable();
+    console.log('[MidnightVault] ✓ Wallet connected successfully via enable()');
     return { connector, walletApi };
   } catch (err: any) {
-    // Handle specific error codes from the DApp connector
     if (err?.code === 'USER_REJECTED' || err?.message?.includes('rejected')) {
       throw new Error('Connection rejected by user. Please approve in Lace.');
     }
     if (err?.code === 'NETWORK_MISMATCH' || err?.message?.includes('network')) {
-      throw new Error('Network mismatch. Please switch Lace to the Midnight testnet.');
+      throw new Error('Network mismatch. Please switch Lace to Midnight Preprod.');
     }
     throw err;
   }
 };
 
 /**
- * Retrieves the shielded address information from the wallet API.
- * Uses the official ConnectedAPI.getShieldedAddresses() method.
+ * Retrieves wallet address info from the connected API.
+ * Tries state() first (DApp Connector v3), falls back to getShieldedAddresses().
  */
 export const getWalletState = async (
   walletApi: ConnectedAPI
 ): Promise<{ address: string; coinPublicKey: string }> => {
-  const state = await walletApi.getShieldedAddresses();
-  return {
-    address: state.shieldedAddress,
-    coinPublicKey: state.shieldedCoinPublicKey,
-  };
+  try {
+    // DApp Connector API v3 method
+    const s = await (walletApi as any).state();
+    return {
+      address: s.address || s.shieldedAddress || '',
+      coinPublicKey: s.coinPublicKey || s.shieldedCoinPublicKey || '',
+    };
+  } catch {
+    // Fallback for older API shape
+    const s = await (walletApi as any).getShieldedAddresses();
+    return {
+      address: s.shieldedAddress || '',
+      coinPublicKey: s.shieldedCoinPublicKey || '',
+    };
+  }
 };
