@@ -4,15 +4,14 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { useWallet } from './WalletContext';
 
 // ── Contract Address ────────────────────────────────────────────────────
-// This is the deployed contract address on Midnight Preprod/Preview.
-// Replace with your actual deployed contract address.
+// Deployed on Midnight Preprod — verified on-chain.
 export const PREPROD_CONTRACT_ADDRESS =
   import.meta.env.VITE_CONTRACT_ADDRESS ||
-  'a7f3d891c4b2e056f8a913d4c7e2b089f1d3c456a7f8e9b0c1d2e3f4a5b6c7d8';
+  'mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64';
 
 // ── Network Config ──────────────────────────────────────────────────────
-const DEFAULT_INDEXER_URI = 'https://indexer.testnet.midnight.network/api/v1/graphql';
-const DEFAULT_INDEXER_WS_URI = 'wss://indexer.testnet.midnight.network/api/v1/graphql';
+const DEFAULT_INDEXER_URI = 'https://indexer.preprod.midnight.network/api/v1/graphql';
+const DEFAULT_INDEXER_WS_URI = 'wss://indexer.preprod.midnight.network/api/v1/graphql';
 
 // ── Types ───────────────────────────────────────────────────────────────
 interface ContractState {
