@@ -283,7 +283,7 @@ export default function Home() {
               <h3 className="text-silver text-sm mb-2 uppercase tracking-widest">Network</h3>
               <div className="text-lg font-light text-moon-white flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" aria-hidden="true" />
-                Preprod
+                Preview
               </div>
             </div>
           </div>
@@ -312,7 +312,7 @@ export default function Home() {
               )}
               {contractAddress && (
                 <a
-                  href={`https://indexer.preprod.midnight.network/api/v4/graphql`}
+                  href={`https://indexer.preview.midnight.network/api/v4/graphql`}
                   target="_blank"
                   rel="noopener noreferrer"
                   id="indexer-link"

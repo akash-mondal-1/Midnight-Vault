@@ -9,8 +9,8 @@ export type WalletState = {
   walletApi: ConnectedAPI | null;
 };
 
-// Network ID for Midnight Preprod
-const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preprod';
+// Network ID — Lace officially supports 'preview' (not preprod)
+const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview';
 
 /**
  * Finds the first compatible Midnight wallet injected into window.midnight.
@@ -72,7 +72,7 @@ export const connectLace = async (): Promise<{
       throw new Error('Connection rejected. Please approve in Lace.');
     }
     if (err?.message?.includes('network') || err?.message?.includes('mismatch')) {
-      throw new Error('Network mismatch. Switch Lace to Midnight Preprod.');
+      throw new Error('Network mismatch. Switch Lace to Midnight Preview (testnet).');
     }
     throw new Error(err?.message || 'Failed to connect wallet');
   }

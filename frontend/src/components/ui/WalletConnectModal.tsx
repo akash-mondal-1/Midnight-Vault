@@ -134,7 +134,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-moon-white">Connect Wallet</h2>
-                    <p className="text-xs text-silver/60">Midnight Network · Preprod</p>
+                    <p className="text-xs text-silver/60">Midnight Network · Preview (Testnet)</p>
                   </div>
                 </div>
                 <button
