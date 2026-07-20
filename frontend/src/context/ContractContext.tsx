@@ -10,9 +10,13 @@ export const PREPROD_CONTRACT_ADDRESS =
   'mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64';
 
 // ── Network Config ──────────────────────────────────────────────────────
-// Lace officially supports Preview network (not Preprod)
-const DEFAULT_INDEXER_URI = 'https://indexer.preview.midnight.network/api/v4/graphql';
-const DEFAULT_INDEXER_WS_URI = 'wss://indexer.preview.midnight.network/api/v4/graphql/ws';
+// Reads from .env — falls back to Midnight Preview testnet defaults
+const DEFAULT_INDEXER_URI =
+  (import.meta as any).env?.VITE_INDEXER_URI ??
+  'https://indexer.preview.midnight.network/api/v4/graphql';
+const DEFAULT_INDEXER_WS_URI =
+  (import.meta as any).env?.VITE_INDEXER_WS_URI ??
+  'wss://indexer.preview.midnight.network/api/v4/graphql/ws';
 
 // ── Types ───────────────────────────────────────────────────────────────
 interface ContractState {

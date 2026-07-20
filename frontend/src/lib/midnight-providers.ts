@@ -27,8 +27,12 @@ export const initializeProviders = async (
   // Get Lace configuration and shielded addresses
   const config = await connectedAPI.getConfiguration();
   
-  // Try to use proverServerUri if provided, otherwise fallback to the public preview proof server
-  const proofServerUri = config.proverServerUri || 'https://proof-server.preview.midnight.network';
+  // Try to use proverServerUri from wallet config, then env var, then fallback to preview default
+  const envProofServer = (import.meta as any).env?.VITE_PROOF_SERVER_URI;
+  const proofServerUri =
+    config.proverServerUri ||
+    envProofServer ||
+    'https://proof-server.preview.midnight.network';
   const shieldedAddresses = await connectedAPI.getShieldedAddresses();
 
   // Create ZK Config Provider that fetches from the DApp's public directory
