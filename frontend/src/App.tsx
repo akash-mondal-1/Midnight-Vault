@@ -17,6 +17,7 @@ export default function Home() {
     connectWallet,
     disconnect,
     isWalletAvailable,
+    walletType,
     error: walletError,
   } = useWallet();
   const {
@@ -104,9 +105,9 @@ export default function Home() {
               <MoonButton
                 onClick={() => setIsModalOpen(true)}
                 id="header-connect-btn"
-                aria-label="Connect Lace Wallet"
+                aria-label="Connect Wallet"
               >
-                Connect Lace
+                Connect Wallet
               </MoonButton>
             </div>
           )}
@@ -373,7 +374,7 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 className="mb-6 p-4 rounded-xl bg-amber-900/10 border border-amber-500/20 text-amber-200/80 text-sm flex items-center gap-2"
               >
-                <span>Connect your Lace wallet to register.</span>
+                <span>Connect a Midnight wallet to register.</span>
                 <button
                   onClick={() => setIsModalOpen(true)}
                   id="inline-connect-btn"

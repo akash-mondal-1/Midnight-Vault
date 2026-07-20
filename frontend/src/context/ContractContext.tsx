@@ -176,14 +176,14 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
   // ── Deploy new contract ────────────────────────────────────────────
   const deployNewContract = useCallback(async () => {
     if (!isConnected || !walletApi) {
-      setState(prev => ({ ...prev, error: 'Please connect your Lace wallet first.' }));
+      setState(prev => ({ ...prev, error: 'Please connect your wallet first.' }));
       return;
     }
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      console.log('[MidnightVault] Starting contract deployment via Lace...');
+      console.log('[MidnightVault] Starting contract deployment via wallet...');
       const { deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
       const { initializeProviders } = await import('../lib/midnight-providers');
       const { contractName, languageVersion, circuits, ledger } = await import('../lib/contract');
@@ -219,7 +219,7 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
   // ── Register member (circuit call) ─────────────────────────────────
   const registerMember = useCallback(async (secret: bigint) => {
     if (!isConnected || !walletApi) {
-      setState(prev => ({ ...prev, error: 'Please connect your Lace wallet first.' }));
+      setState(prev => ({ ...prev, error: 'Please connect your wallet first.' }));
       return;
     }
 
@@ -249,7 +249,7 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
         contractConfig: contractDef,
       } as any);
 
-      console.log('[MidnightVault] Generating proof (Lace will ask for authorization)...');
+      console.log('[MidnightVault] Generating proof (wallet will ask for authorization)...');
       
       const tx = await contract.callTx.registerMember(secret);
       
