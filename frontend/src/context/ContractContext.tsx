@@ -3,6 +3,18 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useWallet } from './WalletContext';
 
+// Midnight SDK — setNetworkId MUST be called before any contract interaction
+// Source: @midnight-ntwrk/midnight-js-network-id (official Midnight SDK)
+import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+
+// Active network ID — configures the global Midnight SDK network context
+const ACTIVE_NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview';
+
+// Call setNetworkId immediately on module load — required by the SDK
+// This sets the network context for all subsequent contract operations
+setNetworkId(ACTIVE_NETWORK_ID);
+console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') called — network context initialized`);
+
 // ── Contract Address ────────────────────────────────────────────────────
 // Deployed on Midnight Preprod — verified on-chain.
 export const PREPROD_CONTRACT_ADDRESS =
@@ -187,7 +199,10 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      console.log('[MidnightVault] Starting contract deployment via wallet...');
+      console.log('[MidnightVault] Starting contract deployment...');
+      // Re-assert network ID before deployment (defensive — in case of hot reload)
+      setNetworkId(ACTIVE_NETWORK_ID);
+      console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before deploy`);
       const { deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
       const { initializeProviders } = await import('../lib/midnight-providers');
       const { contractName, languageVersion, circuits, ledger } = await import('../lib/contract');
@@ -241,7 +256,10 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
     }));
 
     try {
-      console.log('[MidnightVault] Calling registerMember circuit via Lace...');
+      console.log('[MidnightVault] Calling registerMember circuit...');
+      // Re-assert network ID before every circuit call (defensive)
+      setNetworkId(ACTIVE_NETWORK_ID);
+      console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before circuit call`);
       const { findDeployedContract } = await import('@midnight-ntwrk/midnight-js-contracts');
       const { initializeProviders } = await import('../lib/midnight-providers');
       const contractDef = await import('../lib/contract');
