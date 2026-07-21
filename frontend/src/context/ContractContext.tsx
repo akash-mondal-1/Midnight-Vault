@@ -15,8 +15,59 @@ const ACTIVE_NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview'
 setNetworkId(ACTIVE_NETWORK_ID);
 console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') called — network context initialized`);
 
+// ── Address Normalizer ──────────────────────────────────────────────────
+const BECH32_ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+
+/**
+ * Normalizes a Midnight contract address.
+ * Midnight JS SDK (assertIsContractAddress) requires contract addresses to be 
+ * 64-character hexadecimal strings without 'mn_addr_...' Bech32 prefix or '0x' prefix.
+ */
+export function normalizeContractAddress(address: string): string {
+  if (!address) return address;
+  const clean = address.trim();
+
+  // If already 64 hex chars (or 66 starting with 0x)
+  if (/^(0x)?[0-9a-fA-F]{64}$/.test(clean)) {
+    return clean.startsWith('0x') || clean.startsWith('0X') ? clean.slice(2) : clean;
+  }
+
+  // Decode Bech32 formatted address like mn_addr_preview1...
+  if (clean.includes('1')) {
+    try {
+      const pos = clean.lastIndexOf('1');
+      const dataStr = clean.substring(pos + 1).toLowerCase();
+      const words: number[] = [];
+      for (let i = 0; i < dataStr.length; i++) {
+        const idx = BECH32_ALPHABET.indexOf(dataStr[i]);
+        if (idx !== -1) words.push(idx);
+      }
+      const payload = words.slice(0, words.length - 6);
+      let val = 0;
+      let bits = 0;
+      const bytes: number[] = [];
+      for (const w of payload) {
+        val = (val << 5) | w;
+        bits += 5;
+        while (bits >= 8) {
+          bits -= 8;
+          bytes.push((val >> bits) & 0xff);
+        }
+      }
+      const hex = bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+      if (hex.length === 64) {
+        return hex;
+      }
+    } catch (e) {
+      console.warn('[MidnightVault] Failed to parse Bech32 contract address:', e);
+    }
+  }
+
+  return clean;
+}
+
 // ── Contract Address ────────────────────────────────────────────────────
-// Deployed on Midnight Preprod — verified on-chain.
+// Deployed on Midnight Preview — verified on-chain.
 export const PREPROD_CONTRACT_ADDRESS =
   (import.meta as any).env?.VITE_CONTRACT_ADDRESS ||
   'mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64';
@@ -81,9 +132,10 @@ async function fetchContractState(
   address: string,
   indexerUrl: string = DEFAULT_INDEXER_URI
 ): Promise<{ exists: boolean; stateHex: string | null }> {
+  const normalizedAddr = normalizeContractAddress(address);
   const query = `
     query {
-      contractState(address: "${address}") {
+      contractState(address: "${normalizedAddr}") {
         state
       }
     }
@@ -282,10 +334,15 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       }
 
       const providers = await initializeProviders(activeApi);
+      const normalizedContractAddress = normalizeContractAddress(state.contractAddress);
       
+      console.log(`[MidnightVault] Connecting to contract at normalized address: ${normalizedContractAddress}`);
+
       const contract = await findDeployedContract(providers, {
-        contractAddress: state.contractAddress,
-        contractConfig: contractDef,
+        compiledContract: contractDef.default ?? contractDef,
+        contractAddress: normalizedContractAddress,
+        privateStateId: 'membership-state',
+        initialPrivateState: {},
       } as any);
 
       console.log('[MidnightVault] Generating ZK proof (this may take 30-120 seconds on Preview testnet)...');
