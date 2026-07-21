@@ -125,7 +125,7 @@ function parseStateCount(hex: string | null): number {
 
 // ── Provider ────────────────────────────────────────────────────────────
 export const ContractProvider = ({ children }: { children: React.ReactNode }) => {
-  const { walletApi, isConnected } = useWallet();
+  const { walletApi, isConnected, getFreshWalletApi } = useWallet();
   const [state, setState] = useState<ContractState>({
     contractAddress: PREPROD_CONTRACT_ADDRESS,
     registeredMembersCount: 0,
@@ -264,14 +264,31 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       const { initializeProviders } = await import('../lib/midnight-providers');
       const contractDef = await import('../lib/contract');
 
-      const providers = await initializeProviders(walletApi);
+      // ─────────────────────────────────────────────────────────────────
+      // CRITICAL: Get a FRESH wallet API channel right before ZK proof.
+      //
+      // The Chrome extension service worker shuts down after ~5 min of
+      // inactivity, invalidating the 'midnight-wallet' message channel.
+      // Error: "Remote API with channel 'midnight-wallet' was shutdown"
+      //
+      // Fix: re-call connector.connect(networkId) to get a new live API.
+      // ─────────────────────────────────────────────────────────────────
+      console.log('[MidnightVault] Refreshing wallet API channel before ZK proof...');
+      const freshApi = await getFreshWalletApi();
+      const activeApi = freshApi ?? walletApi;
+
+      if (!activeApi) {
+        throw new Error('Wallet disconnected. Please click Connect Wallet and try again.');
+      }
+
+      const providers = await initializeProviders(activeApi);
       
       const contract = await findDeployedContract(providers, {
         contractAddress: state.contractAddress,
         contractConfig: contractDef,
       } as any);
 
-      console.log('[MidnightVault] Generating proof (wallet will ask for authorization)...');
+      console.log('[MidnightVault] Generating ZK proof (this may take 30-120 seconds on Preview testnet)...');
       
       const tx = await contract.callTx.registerMember(secret);
       
@@ -282,15 +299,50 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
         isLoading: false,
         privacyProven: true,
         registeredMembersCount: prev.registeredMembersCount + 1,
-        txHash: 'Real transaction submitted via Lace',
+        txHash: typeof tx === 'string' ? tx : 'ZK proof submitted on-chain',
         lastProofTimestamp: Date.now(),
       }));
     } catch (err: any) {
       console.error('[MidnightVault] Circuit execution failed:', err);
+      const rawMsg: string = err?.message ?? String(err) ?? '';
+
+      // ── Friendly error messages ──────────────────────────────────────
+      let userMsg = rawMsg;
+
+      if (
+        rawMsg.includes('was shutdown') ||
+        rawMsg.includes('channel') ||
+        rawMsg.includes('object can no longer be used') ||
+        rawMsg.includes('Extension context invalidated')
+      ) {
+        userMsg =
+          'Wallet channel timed out during proof generation. ' +
+          'Please reload the page (Ctrl+R), reconnect your wallet, and try again. ' +
+          'This is a browser extension limitation — not a bug in your contract.';
+      } else if (
+        rawMsg.includes('User rejected') ||
+        rawMsg.includes('rejected') ||
+        rawMsg.includes('denied')
+      ) {
+        userMsg = 'Transaction was rejected in your wallet. Please try again and click Approve.';
+      } else if (
+        rawMsg.includes('network') ||
+        rawMsg.includes('fetch') ||
+        rawMsg.includes('ECONNREFUSED')
+      ) {
+        userMsg =
+          'Network error connecting to Midnight Preview. ' +
+          'The testnet may be temporarily unavailable. Please try again in a moment.';
+      } else if (rawMsg.includes('insufficient') || rawMsg.includes('balance')) {
+        userMsg =
+          'Insufficient tNIGHT or DUST balance. ' +
+          'Top up at https://faucet.preview.midnight.network/ and try again.';
+      }
+
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: err?.message || 'Circuit execution failed',
+        error: userMsg || 'Circuit execution failed. Please try again.',
       }));
     }
   }, [isConnected, walletApi, state.contractAddress]);

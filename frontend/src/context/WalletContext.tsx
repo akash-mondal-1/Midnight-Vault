@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import {
   WalletState,
   WalletType,
@@ -11,7 +11,9 @@ import {
   is1AMWalletAvailable,
   isLaceWalletAvailable,
 } from '@/lib/midnight';
-import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
+import type { ConnectedAPI, InitialAPI } from '@midnight-ntwrk/dapp-connector-api';
+
+const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview';
 
 interface WalletContextType extends WalletState {
   isWalletAvailable: boolean;
@@ -20,6 +22,10 @@ interface WalletContextType extends WalletState {
   connectWallet: () => Promise<void>;
   connect1AMWallet: () => Promise<void>;
   disconnect: () => void;
+  /** Returns a fresh ConnectedAPI by re-calling connector.connect(networkId). 
+   *  Call this right before any long-running circuit to avoid the 
+   *  'Remote API channel was shutdown' Chrome service-worker timeout. */
+  getFreshWalletApi: () => Promise<ConnectedAPI | null>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -111,6 +117,28 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, []);
 
+  /**
+   * Returns a FRESH ConnectedAPI by re-calling connector.connect(networkId).
+   * Use this right before any long-running ZK proof to avoid the Chrome
+   * service-worker timeout that kills the 'midnight-wallet' channel after ~5min.
+   * If no connector is available (not connected), returns null.
+   */
+  const getFreshWalletApi = useCallback(async (): Promise<ConnectedAPI | null> => {
+    const connector = state.connector as InitialAPI | null;
+    if (!connector) return null;
+    try {
+      console.log('[MidnightVault] Re-connecting wallet to get fresh API channel...');
+      const freshApi = await connector.connect(NETWORK_ID);
+      // Update stored walletApi so other callers also get the fresh one
+      setState(prev => ({ ...prev, walletApi: freshApi }));
+      console.log('[MidnightVault] ✓ Fresh wallet API obtained');
+      return freshApi;
+    } catch (err: any) {
+      console.warn('[MidnightVault] getFreshWalletApi failed:', err?.message);
+      return state.walletApi;
+    }
+  }, [state.connector, state.walletApi]);
+
   return (
     <WalletContext.Provider
       value={{
@@ -121,6 +149,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
         connectWallet,
         connect1AMWallet,
         disconnect,
+        getFreshWalletApi,
       }}
     >
       {children}
