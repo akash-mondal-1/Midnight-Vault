@@ -8,7 +8,7 @@ import { WalletConnectModal } from '@/components/ui/WalletConnectModal';
 import { useWallet } from '@/context/WalletContext';
 import { useContract } from '@/context/ContractContext';
 import { PREPROD_CONTRACT_ADDRESS } from '@/context/ContractContext';
-import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle } from 'lucide-react';
+import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, Eye, EyeOff, RefreshCw } from 'lucide-react';
 
 export default function Home() {
   const {
@@ -36,6 +36,16 @@ export default function Home() {
   const [secretInput, setSecretInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
+  const [secretSaved, setSecretSaved] = useState(false);
+
+  // Generate a random 6-digit numeric secret for the ZK witness
+  const generateSecret = useCallback(() => {
+    const random = Math.floor(100000 + Math.random() * 900000).toString();
+    setSecretInput(random);
+    setShowSecret(true);  // show it so user can copy/save it
+    setSecretSaved(false);
+  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -418,34 +428,85 @@ export default function Home() {
               </motion.div>
             ) : (
               <form onSubmit={handleRegister} className="flex-1 flex flex-col" noValidate>
-                <div className="mb-8 flex-1">
-                  <label
-                    htmlFor="secret-input"
-                    className="block text-sm text-silver mb-2"
-                  >
-                    Membership Secret{' '}
-                    <span className="text-silver/40 text-xs">(numeric only)</span>
-                  </label>
-                  <input
-                    id="secret-input"
-                    type="password"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={secretInput}
-                    onChange={e => {
-                      // Only allow numeric characters
-                      const val = e.target.value.replace(/[^0-9]/g, '');
-                      setSecretInput(val);
-                    }}
-                    placeholder="Enter numeric secret..."
-                    autoComplete="off"
-                    className="w-full bg-space-black/50 border border-white/10 rounded-xl px-4 py-3 text-moon-white focus:outline-none focus:border-moon-glow/50 focus:ring-1 focus:ring-moon-glow/20 transition-colors placeholder:text-silver/30"
-                    aria-describedby="secret-hint"
-                    required
-                    minLength={1}
-                  />
+                <div className="mb-6 flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="secret-input" className="block text-sm text-silver">
+                      Membership Secret
+                    </label>
+                    <button
+                      type="button"
+                      onClick={generateSecret}
+                      id="generate-secret-btn"
+                      className="inline-flex items-center gap-1 text-xs text-moon-glow/70 hover:text-moon-glow transition-colors"
+                      title="Generate a random 6-digit secret"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Generate
+                    </button>
+                  </div>
+
+                  {/* What is this? callout */}
+                  <div className="mb-3 p-3 rounded-lg bg-soft-indigo/10 border border-soft-indigo/20 text-xs text-silver/70 leading-relaxed">
+                    <strong className="text-moon-white/80">What is this?</strong>&nbsp;
+                    This is your private ZK membership PIN — any number you choose (e.g. <code className="text-moon-glow">42</code> or <code className="text-moon-glow">123456</code>).
+                    It acts as your proof credential. The number itself <strong className="text-moon-white/80">never leaves your browser</strong> — only a ZK proof is sent on-chain.
+                    Use the same number to prove membership again later.
+                  </div>
+
+                  {/* Input + eye toggle */}
+                  <div className="relative">
+                    <input
+                      id="secret-input"
+                      type={showSecret ? 'text' : 'password'}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={secretInput}
+                      onChange={e => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setSecretInput(val);
+                        setSecretSaved(false);
+                      }}
+                      placeholder="e.g. 42 or 123456"
+                      autoComplete="off"
+                      className="w-full bg-space-black/50 border border-white/10 rounded-xl px-4 py-3 pr-10 text-moon-white focus:outline-none focus:border-moon-glow/50 focus:ring-1 focus:ring-moon-glow/20 transition-colors placeholder:text-silver/30 font-mono tracking-widest"
+                      aria-describedby="secret-hint"
+                      required
+                      minLength={1}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(v => !v)}
+                      id="toggle-secret-visibility"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-silver/40 hover:text-silver/80 transition-colors"
+                      aria-label={showSecret ? 'Hide secret' : 'Show secret'}
+                    >
+                      {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  {/* Save reminder — shown when secret is visible and non-empty */}
+                  {showSecret && secretInput && !secretSaved && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-2 flex items-center justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/20"
+                    >
+                      <span className="text-xs text-amber-200/80">
+                        ⚠️ Save this number! You’ll need it to prove membership again.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSecretSaved(true)}
+                        id="confirm-saved-btn"
+                        className="ml-2 text-xs text-amber-300 hover:text-amber-100 whitespace-nowrap transition-colors"
+                      >
+                        Got it ✓
+                      </button>
+                    </motion.div>
+                  )}
+
                   <p id="secret-hint" className="text-xs text-silver/40 mt-2">
-                    The secret is processed locally as a private witness in the ZK circuit.
+                    Processed as a private Compact <code>Field</code> witness — stays local, proven via ZK.
                   </p>
                 </div>
 

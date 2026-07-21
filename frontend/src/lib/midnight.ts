@@ -160,6 +160,9 @@ export const connectLace = async (): Promise<{
  * 1AM injects at window.midnight['1am'] and supports the standard DApp Connector API.
  * Features faster syncing via its WASM-native proving engine.
  *
+ * Includes retry logic — 1AM's background script can take a moment to initialize.
+ * If you get "No response from wallet background script", wait 2s and retry or reload.
+ *
  * Source: https://1am.xyz · DApp Connector v4
  */
 export const connect1AM = async (): Promise<{
@@ -170,14 +173,49 @@ export const connect1AM = async (): Promise<{
     throw new Error('Must run in browser');
   }
 
-  const connector = get1AMConnector();
-  if (!connector) {
-    throw new Error(
-      '1AM wallet not found. Please install the 1AM extension from chromewebstore.google.com/detail/1am/bphnkdkcnfhompoegfpgnkidcjfbojjp',
-    );
+  // Retry up to 3 times — 1AM background script may need a moment to init
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 800; // ms
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const connector = get1AMConnector();
+    if (!connector) {
+      throw new Error(
+        '1AM wallet not found. Please install the 1AM extension from chromewebstore.google.com/detail/1am/bphnkdkcnfhompoegfpgnkidcjfbojjp',
+      );
+    }
+
+    try {
+      return await connectConnector(connector, '1AM');
+    } catch (err: any) {
+      const msg = err?.message ?? '';
+      const isBackgroundScriptError =
+        msg.includes('No response from wallet background script') ||
+        msg.includes('background script') ||
+        msg.includes('Could not establish connection') ||
+        msg.includes('Extension context invalidated');
+
+      if (isBackgroundScriptError && attempt < MAX_RETRIES) {
+        console.warn(
+          `[MidnightVault] 1AM background script not ready (attempt ${attempt}/${MAX_RETRIES}), retrying in ${RETRY_DELAY}ms...`,
+        );
+        await new Promise(r => setTimeout(r, RETRY_DELAY));
+        continue;
+      }
+
+      // On last attempt or non-retryable error, throw with helpful message
+      if (isBackgroundScriptError) {
+        throw new Error(
+          '1AM wallet is loading — please wait a moment, then try again. ' +
+          'If it persists, reload the page (Ctrl+R) and click Connect again.',
+        );
+      }
+
+      throw err;
+    }
   }
 
-  return connectConnector(connector, '1AM');
+  throw new Error('1AM connection failed after retries. Please reload the page and try again.');
 };
 
 // ── Address Helpers ─────────────────────────────────────────────────────
