@@ -527,6 +527,18 @@ export default function Home() {
                   )}
                 </MoonButton>
 
+                {isLoading && (
+                  <div className="mt-3 p-3 rounded-xl bg-moon-glow/5 border border-moon-glow/20 text-center space-y-1">
+                    <p className="text-xs text-moon-glow font-medium flex items-center justify-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-moon-glow animate-ping" />
+                      Generating ZK proof via Midnight proof server...
+                    </p>
+                    <p className="text-[11px] text-silver/60">
+                      Proof creation takes 30–90 seconds. Your wallet popup will open to approve the transaction once proof is ready.
+                    </p>
+                  </div>
+                )}
+
                 {!isConnected && (
                   <p className="text-xs text-silver/40 text-center mt-3">
                     Wallet connection required to submit
