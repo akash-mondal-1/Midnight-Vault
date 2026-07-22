@@ -107,7 +107,17 @@ export const initializeProviders = async (
     config.proverServerUri ||
     envProofServer ||
     'https://proof-server.preview.midnight.network';
-  const shieldedAddresses = await connectedAPI.getShieldedAddresses();
+  const rawShielded = (await connectedAPI.getShieldedAddresses().catch(() => ({}))) as any;
+  const coinPublicKey =
+    rawShielded?.coinPublicKey ||
+    rawShielded?.shieldedCoinPublicKey ||
+    '0000000000000000000000000000000000000000000000000000000000000000';
+  const encryptionPublicKey =
+    rawShielded?.encryptionPublicKey ||
+    rawShielded?.shieldedEncryptionPublicKey ||
+    '0000000000000000000000000000000000000000000000000000000000000000';
+
+  console.log('[MidnightVault] Wallet coinPublicKey initialized:', coinPublicKey.substring(0, 16) + '...');
 
   // Create ZK Config Provider with fast fallback logic
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -119,8 +129,8 @@ export const initializeProviders = async (
     proofProvider: httpClientProofProvider(proofServerUri, zkConfigProvider),
     publicDataProvider: indexerPublicDataProvider(config.indexerUri, config.indexerWsUri),
     walletProvider: {
-      getCoinPublicKey: () => shieldedAddresses.shieldedCoinPublicKey,
-      getEncryptionPublicKey: () => shieldedAddresses.shieldedEncryptionPublicKey,
+      getCoinPublicKey: () => coinPublicKey,
+      getEncryptionPublicKey: () => encryptionPublicKey,
       balanceTx: async (tx: UnboundTransaction) => {
         // Balance the transaction using Lace / 1AM Wallet
         const txHex = toHex(tx.serialize());
