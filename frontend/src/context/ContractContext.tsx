@@ -257,12 +257,12 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before deploy`);
       const { deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
       const { initializeProviders } = await import('../lib/midnight-providers');
-      const { contractName, languageVersion, circuits, ledger } = await import('../lib/contract');
+      const { compiledMembershipContract } = await import('../lib/compiled-contract');
 
       const providers = await initializeProviders(walletApi);
       
       const deployment = await deployContract(providers, {
-        compiledContract: contractDef.default ?? contractDef,
+        compiledContract: compiledMembershipContract,
         privateStateId: 'membership-state',
         initialPrivateState: {},
       } as any);
@@ -313,7 +313,7 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before circuit call`);
       const { findDeployedContract, deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
       const { initializeProviders } = await import('../lib/midnight-providers');
-      const contractDef = await import('../lib/contract');
+      const { compiledMembershipContract } = await import('../lib/compiled-contract');
 
       // ─────────────────────────────────────────────────────────────────
       // CRITICAL: Get a FRESH wallet API channel right before ZK proof.
@@ -335,7 +335,7 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       try {
         // Race findDeployedContract against a 10s timeout to prevent watchForDeployTxData hanging on un-indexed contracts
         const findPromise = findDeployedContract(providers, {
-          compiledContract: contractDef.default ?? contractDef,
+          compiledContract: compiledMembershipContract,
           contractAddress: normalizedContractAddress,
           privateStateId: 'membership-state',
           initialPrivateState: {},
@@ -350,7 +350,7 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
         console.warn('[MidnightVault] findDeployedContract fallback triggered:', findErr?.message);
         console.log('[MidnightVault] Deploying fresh contract instance on Midnight Preview via wallet...');
         const deployment = await deployContract(providers, {
-          compiledContract: contractDef.default ?? contractDef,
+          compiledContract: compiledMembershipContract,
           privateStateId: 'membership-state',
           initialPrivateState: {},
         } as any);
