@@ -10,12 +10,39 @@ import { Transaction } from '@midnight-ntwrk/ledger-v7';
 export const toHex = (arr: Uint8Array): string => Buffer.from(arr).toString('hex');
 export const fromHex = (hex: string): Uint8Array => new Uint8Array(Buffer.from(hex, 'hex'));
 
-// We don't have a full private state for this simple contract, so we use a dummy one
-const dummyPrivateStateProvider = {
-  get: async () => ({}),
-  set: async () => {},
-  remove: async () => {},
+// In-memory private state provider implementation matching PrivateStateProvider interface
+const createInMemoryPrivateStateProvider = () => {
+  const states = new Map<string, any>();
+  const signingKeys = new Map<string, any>();
+  let currentContractAddress: string | null = null;
+
+  return {
+    setContractAddress: (address: string) => {
+      currentContractAddress = address;
+    },
+    getContractAddress: () => currentContractAddress,
+    get: async (key: string) => states.get(key) ?? null,
+    set: async (key: string, state: any) => {
+      states.set(key, state);
+    },
+    remove: async (key: string) => {
+      states.delete(key);
+    },
+    getSigningKey: async (address?: string) => {
+      const addr = address ?? currentContractAddress;
+      return addr ? (signingKeys.get(addr) ?? null) : null;
+    },
+    setSigningKey: async (address: string, signingKey: any) => {
+      signingKeys.set(address, signingKey);
+    },
+    clear: async () => {
+      states.clear();
+      signingKeys.clear();
+    },
+  };
 };
+
+const privateStateProviderInstance = createInMemoryPrivateStateProvider();
 
 export const initializeProviders = async (
   connectedAPI: ConnectedAPI,
@@ -40,7 +67,7 @@ export const initializeProviders = async (
   const zkConfigProvider = new FetchZkConfigProvider(origin, fetch.bind(window));
 
   return {
-    privateStateProvider: dummyPrivateStateProvider as any,
+    privateStateProvider: privateStateProviderInstance as any,
     zkConfigProvider,
     proofProvider: httpClientProofProvider(proofServerUri, zkConfigProvider),
     publicDataProvider: indexerPublicDataProvider(config.indexerUri, config.indexerWsUri),
