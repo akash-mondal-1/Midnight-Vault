@@ -5,6 +5,10 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 import path from 'path';
 
 export default defineConfig({
+  define: {
+    'process.env': {},
+    global: 'globalThis',
+  },
   plugins: [
     react(),
     wasm(),
@@ -13,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      buffer: 'buffer',
     },
   },
   server: {
