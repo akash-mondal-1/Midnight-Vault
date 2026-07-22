@@ -262,11 +262,10 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       const providers = await initializeProviders(walletApi);
       
       const deployment = await deployContract(providers, {
-        privateStateAddress: 'vault-membership-state',
-        zkConfigPath: `${window.location.origin}/zkir`,
-        compilerVersion: languageVersion,
+        compiledContract: contractDef.default ?? contractDef,
+        privateStateId: 'membership-state',
         initialPrivateState: {},
-      } as any); // Note: deployment params can vary based on SDK version, we're skipping full types
+      } as any);
 
       // The `deployContract` call uses `walletApi.balanceUnsealedTransaction` and `submitTransaction` behind the scenes!
       console.log('[MidnightVault] Contract deployed!', deployment.deployTxData.public.contractAddress);
@@ -312,18 +311,12 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       // Re-assert network ID before every circuit call (defensive)
       setNetworkId(ACTIVE_NETWORK_ID);
       console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before circuit call`);
-      const { findDeployedContract } = await import('@midnight-ntwrk/midnight-js-contracts');
+      const { findDeployedContract, deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
       const { initializeProviders } = await import('../lib/midnight-providers');
       const contractDef = await import('../lib/contract');
 
       // ─────────────────────────────────────────────────────────────────
       // CRITICAL: Get a FRESH wallet API channel right before ZK proof.
-      //
-      // The Chrome extension service worker shuts down after ~5 min of
-      // inactivity, invalidating the 'midnight-wallet' message channel.
-      // Error: "Remote API with channel 'midnight-wallet' was shutdown"
-      //
-      // Fix: re-call connector.connect(networkId) to get a new live API.
       // ─────────────────────────────────────────────────────────────────
       console.log('[MidnightVault] Refreshing wallet API channel before ZK proof...');
       const freshApi = await getFreshWalletApi();
@@ -338,14 +331,39 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       
       console.log(`[MidnightVault] Connecting to contract at normalized address: ${normalizedContractAddress}`);
 
-      const contract = await findDeployedContract(providers, {
-        compiledContract: contractDef.default ?? contractDef,
-        contractAddress: normalizedContractAddress,
-        privateStateId: 'membership-state',
-        initialPrivateState: {},
-      } as any);
+      let contract: any = null;
+      try {
+        // Race findDeployedContract against a 10s timeout to prevent watchForDeployTxData hanging on un-indexed contracts
+        const findPromise = findDeployedContract(providers, {
+          compiledContract: contractDef.default ?? contractDef,
+          contractAddress: normalizedContractAddress,
+          privateStateId: 'membership-state',
+          initialPrivateState: {},
+        } as any);
 
-      console.log('[MidnightVault] Generating ZK proof (this may take 30-120 seconds on Preview testnet)...');
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('CONTRACT_NOT_FOUND_ON_INDEXER')), 10000)
+        );
+
+        contract = await Promise.race([findPromise, timeoutPromise]);
+      } catch (findErr: any) {
+        console.warn('[MidnightVault] findDeployedContract fallback triggered:', findErr?.message);
+        console.log('[MidnightVault] Deploying fresh contract instance on Midnight Preview via wallet...');
+        const deployment = await deployContract(providers, {
+          compiledContract: contractDef.default ?? contractDef,
+          privateStateId: 'membership-state',
+          initialPrivateState: {},
+        } as any);
+        contract = deployment;
+        if (deployment?.deployTxData?.public?.contractAddress) {
+          setState(prev => ({
+            ...prev,
+            contractAddress: deployment.deployTxData.public.contractAddress,
+          }));
+        }
+      }
+
+      console.log('[MidnightVault] Generating ZK proof and preparing wallet authorization...');
       
       const tx = await contract.callTx.registerMember(secret);
       
