@@ -2,7 +2,7 @@ import { CompiledContract } from '@midnight-ntwrk/compact-js';
 
 /**
  * MembershipContract execution runtime class.
- * Conforms to Compact JS runtime requirements (contains ctor, witnesses, impureCircuits).
+ * Conforms to Compact JS runtime requirements (contains ctor, witnesses, impureCircuits, initialState).
  */
 export class MembershipContract {
   witnesses: any;
@@ -20,6 +20,15 @@ export class MembershipContract {
       },
     };
     this.pureCircuits = {};
+  }
+
+  initialState(context: any) {
+    return {
+      result: {
+        registeredMembersCount: 0n,
+      },
+      context,
+    };
   }
 }
 
