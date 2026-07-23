@@ -32,12 +32,12 @@
 
 ### Verify On-Chain
 
-Query the deployed contract state via the Midnight Preview Indexer:
+Query the deployed contract state via the Midnight Preview Indexer (v4 API supports `contractAction`):
 
 ```graphql
 # POST https://indexer.preview.midnight.network/api/v4/graphql
 {
-  contractState(address: "mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64") {
+  contractAction(address: "1a95481fb484497c7815ad9df9cf3d4cde905dd625983b09f0a25320eaaa35d2") {
     state
   }
 }

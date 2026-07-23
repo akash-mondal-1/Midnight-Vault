@@ -222,18 +222,18 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       const { exists, stateHex } = await fetchContractState(state.contractAddress, indexerUrl);
 
       if (exists) {
-        console.log('[MidnightVault] ✓ Contract found on-chain');
+        console.log('[MidnightVault] ✓ Verified deployed contract on Midnight network:', state.contractAddress);
         setIsContractValid(true);
         setState(prev => ({
           ...prev,
           registeredMembersCount: parseStateCount(stateHex),
         }));
       } else {
-        console.warn('[MidnightVault] ✗ Contract not found on-chain (graceful fallback to active for demo/wallet address)');
-        setIsContractValid(true);
+        console.log('[MidnightVault] Contract address not found on indexer (will deploy on-chain via wallet on circuit execution):', state.contractAddress);
+        setIsContractValid(false);
         setState(prev => ({
           ...prev,
-          registeredMembersCount: prev.registeredMembersCount || 12,
+          registeredMembersCount: 0,
         }));
       }
     };
