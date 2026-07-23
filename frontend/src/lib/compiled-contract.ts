@@ -1,6 +1,6 @@
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { emptyZswapLocalState } from '@midnight-ntwrk/compact-runtime';
-import { ContractState, StateValue } from '@midnight-ntwrk/onchain-runtime-v2';
+import { ContractState, ContractOperation, StateValue } from '@midnight-ntwrk/onchain-runtime-v2';
 
 /**
  * MembershipContract execution runtime class.
@@ -27,6 +27,8 @@ export class MembershipContract {
   initialState(context: any) {
     const emptyState = StateValue.newNull();
     const contractState = new ContractState(emptyState);
+    // Register the registerMember circuit operation on the initial contract state
+    contractState.setOperation('registerMember', new ContractOperation());
     return {
       currentContractState: contractState,
       currentPrivateState: context.initialPrivateState ?? {},
