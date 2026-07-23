@@ -198,6 +198,43 @@ const am1Api       = await am1Connector.enable('preview');
 
 ---
 
+### 💡 Complete Wallet & DUST Setup Guide (Lace vs 1AM)
+
+> **Important Note for Developers & Judges**: Midnight uses a novel **DUST gas model** for zero-knowledge proof transactions. Follow these steps to ensure smooth on-chain interactions.
+
+#### 1. Wallet Recommendation: 1AM Wallet vs Lace Wallet
+- **1AM Wallet (Recommended)**: Includes built-in **ProofStation DUST sponsorship**, instant WASM-native ZK proving, and a dedicated **Your DUST** monitoring dashboard.
+- **Lace Wallet**: Official Midnight browser extension supporting Preview/Preprod testnets.
+
+#### 2. How Midnight DUST Works
+On Midnight Network, zero-knowledge transactions require **DUST** tokens to pay for proof verification. DUST is generated directly from unshielded `$tNIGHT` tokens.
+
+```text
+[Faucet] ──> Request 5,000 $tNIGHT (Unshielded)
+                 │
+                 ▼
+[Wallet] ──> Click "Generate DUST" from $tNIGHT
+                 │
+                 ▼
+[Maturity] ──> Pending Maturity (MATURING) ──> Spendable Balance (READY)
+                 │
+                 ▼
+[MidnightVault] ──> Sign ZK Proof & Deploy Smart Contract on-chain
+```
+
+#### 3. Step-by-Step Onboarding for Testing
+1. **Get Testnet Tokens**: Copy your wallet's **Unshielded Address** and request testnet tokens from the Midnight Faucet:
+   - Primary: <https://faucet.preview.midnight.network/>
+   - Alternative: <https://midnight-tmnight-preview.nethermind.dev/>
+2. **Register for DUST Generation**:
+   - Open 1AM / Lace Wallet $\rightarrow$ Navigate to **DUST Overview**.
+   - Click **Generate DUST** and register your `$tNIGHT` UTXOs.
+3. **Wait for DUST Maturity**:
+   - Newly generated DUST undergoes a brief **Maturity Period** (`MATURING` $\rightarrow$ `READY`).
+   - Once DUST shows **Available / Ready**, open [MidnightVault](https://mid-night-vault.vercel.app/) $\rightarrow$ Connect Wallet $\rightarrow$ Click **Deploy New Contract Instance** or **Execute ZK Circuit** to sign ZK proofs!
+
+---
+
 ## Test
 
 ```bash
