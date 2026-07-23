@@ -104,6 +104,55 @@ const ContractContext = createContext<ContractContextType | undefined>(undefined
 // ── Helpers ─────────────────────────────────────────────────────────────
 
 /**
+ * Extracts deep error message from Effect FiberFailure cause objects.
+ */
+function formatContractError(err: any): string {
+  if (!err) return 'Operation failed';
+  console.error('[MidnightVault] Detailed error inspection:', err, 'cause:', err?.cause);
+
+  const getMsg = (e: any): string | null => {
+    if (!e) return null;
+    if (typeof e === 'string' && e.trim()) return e;
+    if (e.message && typeof e.message === 'string' && e.message.trim()) return e.message;
+    if (e.cause) return getMsg(e.cause);
+    if (e.error) return getMsg(e.error);
+    return null;
+  };
+
+  const extracted = getMsg(err.cause) || getMsg(err) || (typeof err === 'string' ? err : String(err));
+
+  if (!extracted || extracted === '[object Object]') {
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return 'Operation failed. Please check browser console for details.';
+    }
+  }
+
+  if (
+    extracted.includes('User rejected') ||
+    extracted.includes('rejected') ||
+    extracted.includes('denied') ||
+    extracted.includes('User denied')
+  ) {
+    return 'Transaction was rejected in your Lace wallet. Please try again and click Sign transaction.';
+  }
+  if (
+    extracted.includes('was shutdown') ||
+    extracted.includes('channel') ||
+    extracted.includes('object can no longer be used') ||
+    extracted.includes('Extension context invalidated')
+  ) {
+    return 'Wallet channel timed out. Please reload the page (Ctrl+R), reconnect wallet, and try again.';
+  }
+  if (extracted.includes('insufficient') || extracted.includes('balance')) {
+    return 'Insufficient tNIGHT or DUST balance. Please top up at https://faucet.preview.midnight.network/';
+  }
+
+  return extracted;
+}
+
+/**
  * Generates a privacy proof locally — the secret never leaves the browser.
  * Uses Web Crypto API to hash the secret, proving knowledge without revealing it.
  */
@@ -277,11 +326,11 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
         error: null,
       }));
     } catch (err: any) {
-      console.error('[MidnightVault] Deployment error:', err);
+      console.error('[MidnightVault] Deployment error details:', err, 'cause:', err?.cause);
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: err?.message || 'Deployment failed',
+        error: formatContractError(err),
       }));
     }
   }, [isConnected, walletApi]);
@@ -378,46 +427,11 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
         lastProofTimestamp: Date.now(),
       }));
     } catch (err: any) {
-      console.error('[MidnightVault] Circuit execution failed:', err);
-      const rawMsg: string = err?.message ?? String(err) ?? '';
-
-      // ── Friendly error messages ──────────────────────────────────────
-      let userMsg = rawMsg;
-
-      if (
-        rawMsg.includes('was shutdown') ||
-        rawMsg.includes('channel') ||
-        rawMsg.includes('object can no longer be used') ||
-        rawMsg.includes('Extension context invalidated')
-      ) {
-        userMsg =
-          'Wallet channel timed out during proof generation. ' +
-          'Please reload the page (Ctrl+R), reconnect your wallet, and try again. ' +
-          'This is a browser extension limitation — not a bug in your contract.';
-      } else if (
-        rawMsg.includes('User rejected') ||
-        rawMsg.includes('rejected') ||
-        rawMsg.includes('denied')
-      ) {
-        userMsg = 'Transaction was rejected in your wallet. Please try again and click Approve.';
-      } else if (
-        rawMsg.includes('network') ||
-        rawMsg.includes('fetch') ||
-        rawMsg.includes('ECONNREFUSED')
-      ) {
-        userMsg =
-          'Network error connecting to Midnight Preview. ' +
-          'The testnet may be temporarily unavailable. Please try again in a moment.';
-      } else if (rawMsg.includes('insufficient') || rawMsg.includes('balance')) {
-        userMsg =
-          'Insufficient tNIGHT or DUST balance. ' +
-          'Top up at https://faucet.preview.midnight.network/ and try again.';
-      }
-
+      console.error('[MidnightVault] Circuit execution failed details:', err, 'cause:', err?.cause);
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: userMsg || 'Circuit execution failed. Please try again.',
+        error: formatContractError(err),
       }));
     }
   }, [isConnected, walletApi, state.contractAddress]);

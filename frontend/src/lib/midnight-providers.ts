@@ -15,7 +15,10 @@ import { Transaction } from '@midnight-ntwrk/ledger-v7';
 
 // Utility for hex conversion
 export const toHex = (arr: Uint8Array): string => Buffer.from(arr).toString('hex');
-export const fromHex = (hex: string): Uint8Array => new Uint8Array(Buffer.from(hex, 'hex'));
+export const fromHex = (hex: string): Uint8Array => {
+  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
+  return new Uint8Array(Buffer.from(clean, 'hex'));
+};
 
 // Custom ZK Config Provider that supports multiple file extension conventions (.pk / .prover, .vk / .verifier, .zkir / .bzkir)
 // This prevents 404 retries and 2-3 minute timeouts when fetching circuit artifacts.
@@ -132,20 +135,21 @@ export const initializeProviders = async (
       getCoinPublicKey: () => coinPublicKey,
       getEncryptionPublicKey: () => encryptionPublicKey,
       balanceTx: async (tx: UnboundTransaction) => {
-        // Balance the transaction using Lace / 1AM Wallet
         const txHex = toHex(tx.serialize());
+        console.log('[MidnightVault] Requesting transaction balancing from Lace wallet...');
         const received = await connectedAPI.balanceUnsealedTransaction(txHex);
-        
-        // Deserialize the balanced transaction returned by wallet
-        return Transaction.deserialize('signature', 'proof', 'binding', fromHex(received.tx));
+        console.log('[MidnightVault] Received balanced transaction from Lace wallet');
+        const rawHex = typeof received === 'string' ? received : received?.tx;
+        return Transaction.deserialize('signature', 'proof', 'binding', fromHex(rawHex));
       },
     },
     midnightProvider: {
       submitTx: async (tx: any) => {
-        // Submit the finalized transaction through wallet
         const txHex = toHex(tx.serialize());
+        console.log('[MidnightVault] Submitting signed transaction via Lace wallet...');
         await connectedAPI.submitTransaction(txHex);
-        return tx.identifiers()[0];
+        const identifiers = tx.identifiers();
+        return identifiers && identifiers.length > 0 ? identifiers[0] : '0x' + txHex.slice(0, 64);
       },
     },
   };
