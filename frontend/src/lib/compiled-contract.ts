@@ -1,6 +1,6 @@
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
 import { emptyZswapLocalState } from '@midnight-ntwrk/compact-runtime';
-import { ChargedState, StateValue } from '@midnight-ntwrk/onchain-runtime-v2';
+import { ContractState, StateValue } from '@midnight-ntwrk/onchain-runtime-v2';
 
 /**
  * MembershipContract execution runtime class.
@@ -26,7 +26,7 @@ export class MembershipContract {
 
   initialState(context: any) {
     const emptyState = StateValue.newNull();
-    const contractState = new ChargedState(emptyState);
+    const contractState = new ContractState(emptyState);
     return {
       currentContractState: contractState,
       currentPrivateState: context.initialPrivateState ?? {},
