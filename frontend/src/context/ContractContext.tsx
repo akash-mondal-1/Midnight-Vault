@@ -108,14 +108,40 @@ const ContractContext = createContext<ContractContextType | undefined>(undefined
  */
 function formatContractError(err: any): string {
   if (!err) return 'Operation failed';
-  console.error('[MidnightVault] Detailed error inspection:', err, 'cause:', err?.cause);
+  console.error('[MidnightVault] Detailed error inspection:', err);
+  if (err?.cause) console.error('[MidnightVault] Cause detail:', err.cause);
+  if (err?.cause?.failure) console.error('[MidnightVault] Failure detail:', err.cause.failure);
 
   const getMsg = (e: any): string | null => {
     if (!e) return null;
-    if (typeof e === 'string' && e.trim()) return e;
-    if (e.message && typeof e.message === 'string' && e.message.trim()) return e.message;
-    if (e.cause) return getMsg(e.cause);
-    if (e.error) return getMsg(e.error);
+    if (typeof e === 'string' && e.trim()) return e.trim();
+
+    // Check Effect failure property first
+    if (e.failure) {
+      const fMsg = getMsg(e.failure);
+      if (fMsg) return fMsg;
+    }
+
+    // Check direct non-empty message property
+    if (e.message && typeof e.message === 'string' && e.message.trim()) {
+      return e.message.trim();
+    }
+
+    // Check reason property
+    if (e.reason && typeof e.reason === 'string' && e.reason.trim()) {
+      return e.reason.trim();
+    }
+
+    // Check recursive cause / error
+    if (e.cause) {
+      const cMsg = getMsg(e.cause);
+      if (cMsg) return cMsg;
+    }
+    if (e.error) {
+      const errMsg = getMsg(e.error);
+      if (errMsg) return errMsg;
+    }
+
     return null;
   };
 
@@ -123,17 +149,20 @@ function formatContractError(err: any): string {
 
   if (!extracted || extracted === '[object Object]') {
     try {
-      return JSON.stringify(err);
+      const str = JSON.stringify(err);
+      if (str && str !== '{}' && str !== '[]') return str;
     } catch {
-      return 'Operation failed. Please check browser console for details.';
+      // Fall through
     }
+    return 'Operation failed or transaction rejected by wallet. Please check browser console for details.';
   }
 
   if (
     extracted.includes('User rejected') ||
     extracted.includes('rejected') ||
     extracted.includes('denied') ||
-    extracted.includes('User denied')
+    extracted.includes('User denied') ||
+    extracted.includes('declined')
   ) {
     return 'Transaction was rejected in your Lace wallet. Please try again and click Sign transaction.';
   }
