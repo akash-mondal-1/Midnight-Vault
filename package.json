@@ -7,8 +7,6 @@
     "build": "tsc",
     "compile": "ts-node scripts/compile.ts",
     "test": "jest",
-    "deploy:preview": "ts-node scripts/deploy.ts --network preview",
-    "deploy:preprod": "ts-node scripts/deploy.ts --network preprod",
     "clean": "rm -rf dist coverage managed/*"
   },
   "keywords": [

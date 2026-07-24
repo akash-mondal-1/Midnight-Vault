@@ -1,48 +1,23 @@
 import { CompiledContract } from '@midnight-ntwrk/compact-js';
-import { emptyZswapLocalState } from '@midnight-ntwrk/compact-runtime';
-import { ContractState, ContractOperation, StateValue } from '@midnight-ntwrk/onchain-runtime-v2';
+import * as MembershipContractModule from '../managed/Membership/contract/index.cjs';
 
-/**
- * MembershipContract execution runtime class.
- * Conforms to Compact JS runtime requirements (contains ctor, witnesses, impureCircuits, initialState).
- */
-export class MembershipContract {
-  witnesses: any;
-  impureCircuits: Record<string, any>;
-  pureCircuits: Record<string, any>;
+export const createMembershipWitnesses = () => ({
+  membershipSecret: ({ privateState }: { privateState: any }): [any, bigint] => [
+    privateState,
+    typeof privateState?.secret === 'bigint' ? privateState.secret : BigInt(privateState?.secret ?? 0),
+  ],
+});
 
-  constructor(witnesses: any) {
-    this.witnesses = witnesses;
-    this.impureCircuits = {
-      registerMember: (context: any, secret: bigint) => {
-        return {
-          result: undefined,
-          context,
-        };
-      },
-    };
-    this.pureCircuits = {};
-  }
+const contractCtor =
+  (MembershipContractModule as any).Contract ||
+  (MembershipContractModule as any).default?.Contract ||
+  (MembershipContractModule as any).default ||
+  MembershipContractModule;
 
-  initialState(context: any) {
-    const emptyState = StateValue.newNull();
-    const contractState = new ContractState(emptyState);
-    // Register the registerMember circuit operation on the initial contract state
-    contractState.setOperation('registerMember', new ContractOperation());
-    return {
-      currentContractState: contractState,
-      currentPrivateState: context.initialPrivateState ?? {},
-      currentZswapLocalState:
-        context.initialZswapLocalState ?? emptyZswapLocalState(context.coinPublicKey),
-    };
-  }
-}
-
-/**
- * CompiledContract instance for Membership.
- * Used by Midnight JS SDK (deployContract & findDeployedContract).
- */
 export const compiledMembershipContract = CompiledContract.make(
   'Membership',
-  MembershipContract as any
+  contractCtor as any
+).pipe(
+  CompiledContract.withWitnesses(createMembershipWitnesses()),
+  CompiledContract.withCompiledFileAssets('../managed/Membership')
 );

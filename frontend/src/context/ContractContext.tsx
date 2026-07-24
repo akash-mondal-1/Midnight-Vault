@@ -69,17 +69,13 @@ export function normalizeContractAddress(address: string): string {
 // ── Contract Address ────────────────────────────────────────────────────
 // Deployed on Midnight Preview — verified on-chain.
 export const PREPROD_CONTRACT_ADDRESS =
-  (import.meta as any).env?.VITE_CONTRACT_ADDRESS ||
-  'mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64';
+  (import.meta as any).env?.VITE_CONTRACT_ADDRESS || '';
 
 // ── Network Config ──────────────────────────────────────────────────────
 // Reads from .env — falls back to Midnight Preview testnet defaults
 const DEFAULT_INDEXER_URI =
   (import.meta as any).env?.VITE_INDEXER_URI ??
   'https://indexer.preview.midnight.network/api/v4/graphql';
-const DEFAULT_INDEXER_WS_URI =
-  (import.meta as any).env?.VITE_INDEXER_WS_URI ??
-  'wss://indexer.preview.midnight.network/api/v4/graphql/ws';
 
 // ── Types ───────────────────────────────────────────────────────────────
 interface ContractState {
@@ -181,27 +177,7 @@ function formatContractError(err: any): string {
   return extracted;
 }
 
-/**
- * Generates a privacy proof locally — the secret never leaves the browser.
- * Uses Web Crypto API to hash the secret, proving knowledge without revealing it.
- */
-async function generateLocalPrivacyProof(secret: bigint): Promise<{
-  proofHash: string;
-  timestamp: number;
-}> {
-  // Convert the secret to bytes
-  const secretBytes = new TextEncoder().encode(secret.toString());
 
-  // Generate SHA-256 hash — the secret is NEVER transmitted, only this hash
-  const hashBuffer = await crypto.subtle.digest('SHA-256', secretBytes);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const proofHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-  return {
-    proofHash,
-    timestamp: Date.now(),
-  };
-}
 
 /**
  * Query the Midnight indexer for contract state.
@@ -445,13 +421,17 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       
       const tx = await contract.callTx.registerMember(secret);
       
-      console.log('[MidnightVault] Transaction submitted!');
+      console.log('[MidnightVault] Transaction submitted! Querying indexer for updated ledger state...');
       
+      // Query authoritative state from Midnight Preview indexer
+      const { stateHex } = await fetchContractState(state.contractAddress);
+      const updatedCount = parseStateCount(stateHex);
+
       setState(prev => ({
         ...prev,
         isLoading: false,
         privacyProven: true,
-        registeredMembersCount: prev.registeredMembersCount + 1,
+        registeredMembersCount: updatedCount,
         txHash: typeof tx === 'string' ? tx : 'ZK proof submitted on-chain',
         lastProofTimestamp: Date.now(),
       }));

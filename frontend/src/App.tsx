@@ -7,7 +7,6 @@ import { CrescentDivider } from '@/components/ui/CrescentDivider';
 import { WalletConnectModal } from '@/components/ui/WalletConnectModal';
 import { useWallet } from '@/context/WalletContext';
 import { useContract } from '@/context/ContractContext';
-import { PREPROD_CONTRACT_ADDRESS } from '@/context/ContractContext';
 import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, Eye, EyeOff, RefreshCw } from 'lucide-react';
 
 export default function Home() {
