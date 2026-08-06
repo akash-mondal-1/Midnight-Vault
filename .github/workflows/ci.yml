@@ -20,16 +20,78 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Install Compact Toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Pin Compact Compiler Version
+        run: |
+          compact update 0.31.1
+          echo "ACTUAL COMPILER VERSION:"
+          compact --version
+
+      - name: Compile Membership Contract
+        run: |
+          compact compile contracts/Membership.compact managed/Membership
+
+      - name: Verify Generated Output and Print Details
+        run: |
+          echo "GENERATED CONTRACT FILES:"
+          ls -la managed/Membership/contract/
+          echo "GENERATED COMPILER METADATA:"
+          ls -la managed/Membership/compiler/
+          echo "GENERATED KEYS:"
+          ls -la managed/Membership/keys/
+          echo "GENERATED ZKIR:"
+          ls -la managed/Membership/zkir/
+
+          echo "SIZES OF ZK ARTIFACTS:"
+          wc -c managed/Membership/keys/registerMember.pk
+          wc -c managed/Membership/keys/registerMember.vk
+          wc -c managed/Membership/zkir/registerMember.zkir
+
+          # Verify that the generated file contains checkRuntimeVersion
+          echo "GENERATED RUNTIME VERSION REQUIREMENT:"
+          grep -o "checkRuntimeVersion('[^']*')" managed/Membership/contract/index.js || grep -o "checkRuntimeVersion('[^']*')" managed/Membership/contract/index.cjs || true
+
+          # Assert Contract export is a function
+          node -e "
+            const fs = require('fs');
+            const file = fs.existsSync('managed/Membership/contract/index.js') ? 'managed/Membership/contract/index.js' : 'managed/Membership/contract/index.cjs';
+            console.log('Loading contract module from:', file);
+            import('./' + file)
+              .then(m => {
+                const Contract = m.Contract;
+                console.log('Contract export exists:', !!Contract);
+                console.log('typeof Contract:', typeof Contract);
+                if (typeof Contract !== 'function') {
+                  console.error('FAIL: Contract is not a constructor/class!');
+                  process.exit(1);
+                }
+                console.log('SUCCESS: Contract is a valid constructor/class');
+              })
+              .catch(err => {
+                console.error('Import failed:', err);
+                process.exit(1);
+              });
+          "
+
+      - name: Sync Artifacts to Frontend
+        run: |
+          # Sync build-time imports
+          rm -rf frontend/src/managed/Membership
+          mkdir -p frontend/src/managed/Membership
+          cp -r managed/Membership/* frontend/src/managed/Membership/
+          
+          # Sync runtime ZK assets to public folder
+          mkdir -p frontend/public/keys
+          mkdir -p frontend/public/zkir
+          cp managed/Membership/keys/* frontend/public/keys/
+          cp managed/Membership/zkir/* frontend/public/zkir/
+
       - name: Install dependencies
         run: npm install
-
-      - name: Verify pre-compiled contract artifacts
-        run: |
-          echo "Verifying pre-compiled Compact contract artifacts..."
-          ls -la managed/Membership/
-          ls -la managed/Membership/keys/ || true
-          ls -la managed/Membership/zkir/ || true
-          echo "✅ Contract artifacts present (compiled locally with Midnight toolchain v0.14.0)"
 
       - name: Run test suite
         run: npm test
@@ -38,6 +100,21 @@ jobs:
         working-directory: ./frontend
         run: npm install
 
+      - name: Print Installed Frontend Runtime Versions
+        working-directory: ./frontend
+        run: |
+          echo "INSTALLED COMPACT-JS VERSION:"
+          npm list @midnight-ntwrk/compact-js || true
+          echo "INSTALLED COMPACT-RUNTIME VERSION:"
+          npm list @midnight-ntwrk/compact-runtime || true
+
       - name: Build Frontend
         working-directory: ./frontend
         run: npm run build
+
+      - name: Upload Compiled Membership Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-membership-artifacts
+          path: managed/Membership/
+

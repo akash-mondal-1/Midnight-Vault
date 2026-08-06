@@ -1,18 +1,8 @@
-pragma language_version >= 0.14.0;
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
 
 export ledger registeredMembersCount: Counter;
-
-ledger Counter {
-  count: Field;
-  
-  constructor() {
-    count = 0;
-  }
-  
-  increment() {
-    count = count + 1;
-  }
-}
 
 // Private witness containing the user's private credential (secret)
 witness membershipSecret(): Field;
