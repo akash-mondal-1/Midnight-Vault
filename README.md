@@ -3,8 +3,8 @@
 [![Midnight CI](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml/badge.svg)](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/Tests-4%20Passed-brightgreen)](./tests/)
 [![Node](https://img.shields.io/badge/Node-22-green)](https://nodejs.org/)
-[![Compact](https://img.shields.io/badge/Compact-0.14.0-blue)](https://docs.midnight.network/)
-[![Network](https://img.shields.io/badge/Network-Preview%20Testnet-purple)](https://indexer.preview.midnight.network/api/v4/graphql)
+[![Compact](https://img.shields.io/badge/Compact-0.31.1-blue)](https://docs.midnight.network/)
+[![Network](https://img.shields.io/badge/Network-Preprod-purple)](https://indexer.preprod.midnight.network/api/v4/graphql)
 
 > **Private Allowlist Access** — prove membership without revealing identity. Built on Midnight Network using zero-knowledge proofs.
 
@@ -14,21 +14,21 @@
 
 ---
 
-## 🟣 Deployed Smart Contract — Midnight Preview Testnet
+## 🟣 Deployed Smart Contract — Midnight Preprod Testnet
 
 | Field | Value |
-|:------|:------|
-| **Contract Address** | `mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64` |
-| **Network** | **Midnight Preview Testnet** |
-| **Network ID** | `preview` (set via `setNetworkId('preview')`) |
+| :--- | :--- |
+| **Contract Address** | `mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8q88ds` |
+| **Network** | **Midnight Preprod Testnet** |
+| **Network ID** | `preprod` (set via `setNetworkId('preprod')`) |
 | **Contract Name** | `Membership` |
-| **Language** | Compact v0.14.0 |
+| **Language** | Compact v0.31.1 |
 | **Circuit** | `registerMember(expectedSecret: Field)` |
 | **Private Witness** | `membershipSecret()` — never transmitted |
 | **Public Ledger** | `registeredMembersCount` (Counter) |
-| **Indexer** | `https://indexer.preview.midnight.network/api/v4/graphql` |
+| **Indexer** | `https://indexer.preprod.midnight.network/api/v4/graphql` |
 | **Deploy Function** | `deployContract()` from `@midnight-ntwrk/midnight-js-contracts` |
-| **Deployed By** | `mn_addr_preview1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8peh7d` |
+| **Deployed By** | `mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8peh7d` |
 
 ### Verify On-Chain
 

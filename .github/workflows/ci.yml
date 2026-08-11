@@ -61,9 +61,27 @@ jobs:
           ls -la managed/Membership/zkir/
 
           echo "SIZES OF ZK ARTIFACTS:"
-          wc -c managed/Membership/keys/registerMember.pk
-          wc -c managed/Membership/keys/registerMember.vk
-          wc -c managed/Membership/zkir/registerMember.zkir
+          # Dynamically detect keys and zkir filenames to print their sizes
+          find managed/Membership/keys/ -type f -exec wc -c {} +
+          find managed/Membership/zkir/ -type f -exec wc -c {} +
+
+          # Fail if any pk, vk, or zkir is missing or zero-sized
+          PK_FILE=$(find managed/Membership/keys/ -name "registerMember.pk" -o -name "registerMember.prover")
+          VK_FILE=$(find managed/Membership/keys/ -name "registerMember.vk" -o -name "registerMember.verifier")
+          ZKIR_FILE=$(find managed/Membership/zkir/ -name "registerMember.zkir" -o -name "registerMember.bzkir")
+
+          if [ -z "$PK_FILE" ] || [ ! -s "$PK_FILE" ]; then
+            echo "FAIL: registerMember proving key is missing or zero bytes!"
+            exit 1
+          fi
+          if [ -z "$VK_FILE" ] || [ ! -s "$VK_FILE" ]; then
+            echo "FAIL: registerMember verification key is missing or zero bytes!"
+            exit 1
+          fi
+          if [ -z "$ZKIR_FILE" ] || [ ! -s "$ZKIR_FILE" ]; then
+            echo "FAIL: registerMember ZKIR is missing or zero bytes!"
+            exit 1
+          fi
 
           # Verify that the generated file contains checkRuntimeVersion
           echo "GENERATED RUNTIME VERSION REQUIREMENT:"
@@ -91,19 +109,6 @@ jobs:
               });
           "
 
-      - name: Sync Artifacts to Frontend
-        run: |
-          # Sync build-time imports
-          rm -rf frontend/src/managed/Membership
-          mkdir -p frontend/src/managed/Membership
-          cp -r managed/Membership/* frontend/src/managed/Membership/
-          
-          # Sync runtime ZK assets to public folder
-          mkdir -p frontend/public/keys
-          mkdir -p frontend/public/zkir
-          cp managed/Membership/keys/* frontend/public/keys/
-          cp managed/Membership/zkir/* frontend/public/zkir/
-
       - name: Install dependencies
         run: npm install
 
@@ -121,6 +126,19 @@ jobs:
           npm list @midnight-ntwrk/compact-js || true
           echo "INSTALLED COMPACT-RUNTIME VERSION:"
           npm list @midnight-ntwrk/compact-runtime || true
+
+      - name: Sync Artifacts to Frontend
+        run: |
+          # Sync build-time imports
+          rm -rf frontend/src/managed/Membership
+          mkdir -p frontend/src/managed/Membership
+          cp -r managed/Membership/* frontend/src/managed/Membership/
+          
+          # Sync runtime ZK assets to public folder
+          mkdir -p frontend/public/keys
+          mkdir -p frontend/public/zkir
+          cp managed/Membership/keys/* frontend/public/keys/
+          cp managed/Membership/zkir/* frontend/public/zkir/
 
       - name: Build Frontend
         working-directory: ./frontend
