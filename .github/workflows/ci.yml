@@ -66,9 +66,9 @@ jobs:
           find managed/Membership/zkir/ -type f -exec wc -c {} +
 
           # Fail if any pk, vk, or zkir is missing or zero-sized
-          PK_FILE=$(find managed/Membership/keys/ -name "registerMember.pk" -o -name "registerMember.prover")
-          VK_FILE=$(find managed/Membership/keys/ -name "registerMember.vk" -o -name "registerMember.verifier")
-          ZKIR_FILE=$(find managed/Membership/zkir/ -name "registerMember.zkir" -o -name "registerMember.bzkir")
+          PK_FILE=$(find managed/Membership/keys/ -name "registerMember.pk" -o -name "registerMember.prover" | head -n 1)
+          VK_FILE=$(find managed/Membership/keys/ -name "registerMember.vk" -o -name "registerMember.verifier" | head -n 1)
+          ZKIR_FILE=$(find managed/Membership/zkir/ -name "registerMember.zkir" -o -name "registerMember.bzkir" | head -n 1)
 
           if [ -z "$PK_FILE" ] || [ ! -s "$PK_FILE" ]; then
             echo "FAIL: registerMember proving key is missing or zero bytes!"
@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
           if [ -z "$ZKIR_FILE" ] || [ ! -s "$ZKIR_FILE" ]; then
-            echo "FAIL: registerMember ZKIR is missing or zero bytes!"
+            echo "FAIL: registerMember ZKIR is missing or zero bytes ($ZKIR_FILE)!"
             exit 1
           fi
 
