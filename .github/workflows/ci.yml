@@ -49,6 +49,9 @@ jobs:
             exit 1
           }
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Verify Generated Output and Print Details
         run: |
           echo "GENERATED CONTRACT FILES:"
@@ -108,9 +111,6 @@ jobs:
                 process.exit(1);
               });
           "
-
-      - name: Install dependencies
-        run: npm install
 
       - name: Run test suite
         run: npm test
