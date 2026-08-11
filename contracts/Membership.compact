@@ -21,5 +21,5 @@ export circuit registerMember(expectedSecret: Field): [] {
   disclose(registrationSuccess);
 
   // Increment the public counter of registered members (Public state transition)
-  registeredMembersCount.increment();
+  registeredMembersCount.increment(1);
 }
