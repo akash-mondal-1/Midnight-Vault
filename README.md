@@ -59,7 +59,9 @@ Level 1 (New Moon) submission was previously reviewed and approved.
 
 ---
 
-## Submission Checklist — Level 2 (Waxing Crescent)
+## Level 2 — Waxing Crescent (Approved ✅)
+
+Level 2 (Waxing Crescent) submission was reviewed and approved.
 
 - [x] **Wallet connect / disconnect** — Lace + 1AM wallet via `@midnight-ntwrk/dapp-connector-api`
 - [x] **`deployContract(...)`** — genuine SDK call with compiled Membership contract
@@ -79,7 +81,7 @@ Level 1 (New Moon) submission was previously reviewed and approved.
 
 - [x] **Fully functional dApp** using Midnight's privacy model
 - [x] **4 tests passing** (≥ 3 required) — see [Test](#test)
-- [x] **CI/CD pipeline** running on every push (artifact verify + test + frontend build)
+- [x] **CI/CD pipeline** running on every push (actual Compact compilation + contract verification + test + frontend build)
 - [x] **Approved idea:** **Private Allowlist Access** — see [Product Proposal](#product-proposal)
 - [x] **41 meaningful commits** (≥ 10 required)
 - [x] **Privacy model documented** — see [Privacy Model](#privacy-model)
@@ -102,7 +104,7 @@ Level 1 (New Moon) submission was previously reviewed and approved.
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 
 // Active network ID — configures the global Midnight SDK network context
-const ACTIVE_NETWORK_ID = import.meta.env?.VITE_NETWORK_ID ?? 'preview';
+const ACTIVE_NETWORK_ID = import.meta.env?.VITE_NETWORK_ID ?? 'preprod';
 
 // Call setNetworkId immediately on module load — required by the SDK
 setNetworkId(ACTIVE_NETWORK_ID);
@@ -118,11 +120,11 @@ import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { setNetworkId }   from '@midnight-ntwrk/midnight-js-network-id';
 
 // Step 1 — mandatory: set network context
-setNetworkId('preview');
+setNetworkId('preprod');
 
 // Step 2 — deploy the compiled Membership contract
 const deployed = await deployContract(providers, {
-  compiledContract: compiledContract,    // from managed/Membership/contract/index.cjs
+  compiledContract: compiledContract,    // from managed/Membership/contract/index.js
   args: [],                              // no constructor args (Counter initializes to 0)
   privateStateId: 'membership-state',   // unique state identifier
   initialPrivateState: {},              // no private state (witness is computed at call time)
@@ -169,10 +171,10 @@ witness membershipSecret(): Field;  // ← stays in browser, NEVER sent to netwo
 
 export circuit registerMember(expectedSecret: Field): [] {
   const secret = membershipSecret();     // private — loaded from browser only
-  assert secret == expectedSecret        // ZK assertion — proved without revealing
-    "Invalid membership secret provided";
+  assert(secret == expectedSecret,       // ZK assertion — proved without revealing
+    "Invalid membership secret provided");
   disclose(1);                           // only the success signal is public
-  registeredMembersCount.increment();    // public counter increments on-chain
+  registeredMembersCount.increment(1);   // public counter increments on-chain
 }
 ```
 
@@ -185,12 +187,12 @@ Dual wallet support via `@midnight-ntwrk/dapp-connector-api` v4:
 ```typescript
 // Lace Wallet — injected at window.midnight.mnLace
 const connector = window.midnight.mnLace;
-const walletApi  = await connector.enable('preview');     // setNetworkId used here too
+const walletApi  = await connector.enable('preprod');     // setNetworkId used here too
 const { address } = await walletApi.state();
 
 // 1AM Wallet — injected at window.midnight['1am']
 const am1Connector = window.midnight['1am'];
-const am1Api       = await am1Connector.enable('preview');
+const am1Api       = await am1Connector.enable('preprod');
 ```
 
 **Wallet selection modal:** Users choose between 1AM (faster WASM-native proving) or Lace.  
@@ -224,8 +226,7 @@ On Midnight Network, zero-knowledge transactions require **DUST** tokens to pay 
 
 #### 3. Step-by-Step Onboarding for Testing
 1. **Get Testnet Tokens**: Copy your wallet's **Unshielded Address** and request testnet tokens from the Midnight Faucet:
-   - Primary: <https://faucet.preview.midnight.network/>
-   - Alternative: <https://midnight-tmnight-preview.nethermind.dev/>
+   - Primary: <https://faucet.preprod.midnight.network/>
 2. **Register for DUST Generation**:
    - Open 1AM / Lace Wallet $\rightarrow$ Navigate to **DUST Overview**.
    - Click **Generate DUST** and register your `$tNIGHT` UTXOs.
@@ -255,12 +256,12 @@ npm test
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every push to `main`:
 
 1. Checkout + Node.js v22 setup
-2. `npm install`
-3. Verify pre-compiled contract artifacts (`managed/Membership/`)
-4. `npm test` — 4-test Jest suite
-5. `cd frontend && npm install && npm run build`
-
-> The Compact toolchain requires a native binary not available in GitHub Actions runners. The contract is compiled locally and artifacts committed — standard practice for Midnight dApps.
+2. Install Compact toolchain & pin version `0.31.1`
+3. Real reproducible Compact compilation: `compact compile contracts/Membership.compact managed/Membership`
+4. Assert generated contract constructor (`typeof Contract === 'function'`) and verify non-zero ZK proving/verifying keys & ZKIR
+5. `npm test` — 4-test Jest suite
+6. `cd frontend && npm install && npm run build`
+7. Upload compiled artifacts via `actions/upload-artifact@v4`
 
 ---
 
@@ -276,7 +277,7 @@ docker-compose up -d
 echo "WALLET_SEED=your-seed-phrase" >> .env
 
 # 3. Deploy
-npm run deploy:preview
+npm run deploy:preprod
 ```
 
 ### Deployer (from deployer/ directory)
@@ -284,23 +285,20 @@ npm run deploy:preview
 ```bash
 cd deployer
 npm install
-npm run network preview      # set active network
+npm run network preprod       # set active network
 npm run setup                # wallet setup + fund
 npm run deploy               # genuine deployContract() call
 ```
 
 **Deployed Contract Address:**
 ```
-mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64
+mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8q88ds
 ```
 
-**Network:** Midnight Preview Testnet  
+**Network:** Midnight Preprod Testnet  
 **tNight Balance:** 5,000 tNight (funded via faucet in both Lace and 1AM wallets)  
-**Faucets:**
-- Primary: <https://faucet.preview.midnight.network/>
-- Alternative: <https://midnight-tmnight-preview.nethermind.dev/>
-
-**Indexer:** <https://indexer.preview.midnight.network/api/v4/graphql>
+**Faucet:** <https://faucet.preprod.midnight.network/>  
+**Indexer:** <https://indexer.preprod.midnight.network/api/v4/graphql>
 
 ![Deploy Terminal Output](assets/deploy-output.png)
 
@@ -311,8 +309,8 @@ mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64
 ```text
 User Browser
   └── wallet connect (Lace or 1AM via window.midnight[...])
-       └── DApp Connector API (enable('preview'))
-            ├── setNetworkId('preview')           ← @midnight-ntwrk/midnight-js-network-id
+       └── DApp Connector API (enable('preprod'))
+            ├── setNetworkId('preprod')           ← @midnight-ntwrk/midnight-js-network-id
             ├── getConfiguration()                 → indexer + proof server URIs
             ├── getShieldedAddresses()             → coin key + encryption key
             └── Contract Interaction:
@@ -343,19 +341,19 @@ npm install
 cd frontend && npm install && npm run dev    # http://localhost:5173
 ```
 
-**Requirements:** Node.js v22, Lace or 1AM wallet extension (set to Preview network)
+**Requirements:** Node.js v22, Lace or 1AM wallet extension (set to Preprod network)
 
 ---
 
 ## Structure
 
 ```text
-contracts/Membership.compact           # ZK smart contract (Compact v0.14.0)
-managed/Membership/                    # Compiled artifacts (committed)
-  contract/index.cjs                   # JS implementation
-  compiler/contract.json               # Circuit metadata
-  keys/registerMember.pk               # Proving key
-  keys/registerMember.vk               # Verification key
+contracts/Membership.compact           # ZK smart contract (Compact v0.31.1)
+managed/Membership/                    # Compiled artifacts (generated in CI)
+  contract/index.js                    # JS implementation
+  compiler/contract-info.json          # Circuit metadata
+  keys/registerMember.prover           # Proving key
+  keys/registerMember.verifier         # Verification key
   zkir/registerMember.zkir             # ZK IR circuit
 scripts/deploy.ts                      # Genuine deployContract() deployment script
 deployer/src/deploy.ts                 # Full wallet-SDK deployer (Node.js)
@@ -366,7 +364,7 @@ frontend/src/
   lib/midnight-providers.ts            # Provider initialization
   components/ui/WalletConnectModal.tsx # Dual wallet connect modal
 tests/membership.test.ts               # 4-test Jest suite
-.github/workflows/ci.yml              # CI/CD pipeline
+.github/workflows/ci.yml              # CI/CD compilation & testing pipeline
 PROPOSAL.md                            # Product proposal: Private Allowlist Access
 ```
 
