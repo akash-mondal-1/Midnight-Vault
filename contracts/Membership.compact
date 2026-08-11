@@ -13,7 +13,7 @@ export circuit registerMember(expectedSecret: Field): [] {
   
   // Validate the secret without revealing it directly in the public state
   // In a real application, this could be a signature verification or ZK proof of membership
-  assert secret == expectedSecret "Invalid membership secret provided";
+  assert(secret == expectedSecret, "Invalid membership secret provided");
   
   // Use disclose() to deliberately reveal a piece of information
   // We disclose the fact that a verification took place successfully
