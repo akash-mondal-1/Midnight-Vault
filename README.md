@@ -32,10 +32,10 @@
 
 ### Verify On-Chain
 
-Query the deployed contract state via the Midnight Preview Indexer (v4 API supports `contractAction`):
+Query the deployed contract state via the Midnight Preprod Indexer (v4 API supports `contractAction`):
 
 ```graphql
-# POST https://indexer.preview.midnight.network/api/v4/graphql
+# POST https://indexer.preprod.midnight.network/api/v4/graphql
 {
   contractAction(address: "1a95481fb484497c7815ad9df9cf3d4cde905dd625983b09f0a25320eaaa35d2") {
     state
@@ -47,7 +47,7 @@ Query the deployed contract state via the Midnight Preview Indexer (v4 API suppo
 
 The contract was deployed using the official Midnight SDK:
 - `deployContract()` from `@midnight-ntwrk/midnight-js-contracts`
-- `setNetworkId('preview')` from `@midnight-ntwrk/midnight-js-network-id`
+- `setNetworkId('preprod')` from `@midnight-ntwrk/midnight-js-network-id`
 
 ![Deployment Terminal Output](assets/deploy-output.png)
 
@@ -63,10 +63,10 @@ Level 1 (New Moon) submission was previously reviewed and approved.
 
 - [x] **Wallet connect / disconnect** — Lace + 1AM wallet via `@midnight-ntwrk/dapp-connector-api`
 - [x] **`deployContract(...)`** — genuine SDK call with compiled Membership contract
-- [x] **`setNetworkId('preview')`** — called in `ContractContext.tsx` on module load + before every circuit call
+- [x] **`setNetworkId('preprod')`** — called in `ContractContext.tsx` on module load + before every circuit call
 - [x] **Circuit called from frontend** — `registerMember` via DApp Connector API
 - [x] **Observable privacy behavior** — `witness membershipSecret()` never leaves browser
-- [x] **Contract deployed to Preview** — `mn_addr_preview1r225s8a5s3yhc7q44kwlnneafn0fqhwkykvrkz0s5ffjp642xhfqfduh64`
+- [x] **Contract deployed to Preprod** — `mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8q88ds`
 - [x] **Deployment authenticity** — `deployContract()` + `setNetworkId()` calls verified in source
 - [x] **Frontend contract interaction** — `findDeployedContract()` + circuit execution
 - [x] **41 meaningful commits** (≥ 8 required)
@@ -86,7 +86,7 @@ Level 1 (New Moon) submission was previously reviewed and approved.
 - [x] **Product proposal:** [`PROPOSAL.md`](./PROPOSAL.md)
 - [x] **Live demo:** <https://mid-night-vault.vercel.app/>
 - [x] **Demo video:** <https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L>
-- [x] **Deployed contract details** — see [Deployed Smart Contract](#-deployed-smart-contract--midnight-preview-testnet)
+- [x] **Deployed contract details** — see [Deployed Smart Contract](#-deployed-smart-contract--midnight-preprod-testnet)
 - [x] **On-chain interaction** — `registerMember` circuit called via DApp Connector after wallet connect
 
 ---
