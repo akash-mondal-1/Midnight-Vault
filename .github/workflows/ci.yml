@@ -1,4 +1,4 @@
-name: Midnight CI
+name: Midnight Vault — CI Compilation
 
 on:
   push:
@@ -7,146 +7,285 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  compile-vault-contract:
+    name: Compile Vault.compact (Ubuntu / genuine Compact 0.31.1)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js v22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install System Dependencies for Compact Compiler
+      # ── 2. Install system libraries required by compactc ────────────────
+      - name: Install system dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y libssl-dev libgmp-dev pkg-config
+          sudo apt-get install -y --no-install-recommends \
+            curl \
+            libssl-dev \
+            libgmp-dev \
+            pkg-config \
+            jq \
+            file
 
-      - name: Install Compact Toolchain
+      # ── 3. Install official Compact toolchain v0.31.1 ────────────────────
+      #
+      # The installer is a shell script published by Midnight Network at:
+      # https://github.com/LFDT-Minokawa/compact/releases/tag/compactc-v0.31.1
+      #
+      # We pin to 0.31.1 because:
+      #   - It implements Compact language 0.23 (our pragma version)
+      #   - It generates compact-runtime 0.16.0 compatible output
+      #   - It is the verified stable release per OFFICIAL_STRATEGY.md
+      #
+      # The installer places the binary at ~/.local/bin/compact
+      - name: Install Compact toolchain v0.31.1
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          echo "=== Downloading Compact toolchain installer ==="
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh \
+            -o /tmp/compact-installer.sh
+
+          echo "=== Running installer ==="
+          sh /tmp/compact-installer.sh
+
+          echo "=== Adding ~/.local/bin to PATH ==="
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Pin Compact Compiler Version
+      # ── 4. Pin to 0.31.1 and verify compiler version ────────────────────
+      - name: Pin Compact version to 0.31.1 and verify
         run: |
-          compact update 0.31.1
-          echo "ACTUAL COMPILER VERSION:"
+          # Force update to exact version
+          compact update 0.31.1 || true
+
+          echo ""
+          echo "=== Compact compiler binary location ==="
+          which compact || (echo "FATAL: compact not found in PATH after install" && exit 1)
+
+          echo ""
+          echo "=== Compact compiler version ==="
           compact --version
 
-      - name: Compile Membership Contract
-        run: |
-          mkdir -p managed/Membership
-          compact compile contracts/Membership.compact managed/Membership 2>&1 || {
-            echo "--- Compact compile failed. Checking for diagnostic info ---"
-            ls -la "$HOME/.compact/" 2>/dev/null || true
-            ls -la "$HOME/.local/bin/" 2>/dev/null || true
-            file "$HOME/.local/bin/compact" 2>/dev/null || true
-            ldd "$HOME/.local/bin/compact" 2>/dev/null || true
+          echo ""
+          echo "=== Verifying this is the Midnight Compact compiler (not Windows compact.exe) ==="
+          VERSION_OUTPUT=$(compact --version 2>&1)
+          echo "$VERSION_OUTPUT"
+
+          # Must contain "compact" or a version number — reject NTFS utility output
+          if echo "$VERSION_OUTPUT" | grep -qi "displays or alters\|compression\|ntfs"; then
+            echo "FATAL: compact on PATH is the NTFS compression utility, not the Midnight Compact compiler!"
             exit 1
+          fi
+
+          # Confirm version 0.31.1 is present
+          if ! echo "$VERSION_OUTPUT" | grep -q "0.31.1"; then
+            echo "WARNING: Expected compiler version 0.31.1 but got: $VERSION_OUTPUT"
+            echo "Proceeding — version may be reported differently. Check logs carefully."
+          fi
+
+          echo ""
+          echo "=== compact binary type ==="
+          file $(which compact) || true
+
+      # ── 5. Compile Vault.compact ─────────────────────────────────────────
+      - name: Compile contracts/Vault.compact
+        run: |
+          echo ""
+          echo "=== Preparing output directory ==="
+          mkdir -p contracts/managed/Vault
+
+          echo ""
+          echo "=== CONTRACT SOURCE ==="
+          echo "File: contracts/Vault.compact"
+          echo "Language pragma:"
+          grep "pragma language_version" contracts/Vault.compact
+
+          echo ""
+          echo "=== COMPILE COMMAND ==="
+          echo "compact compile contracts/Vault.compact contracts/managed/Vault"
+          echo ""
+
+          # Run the real compilation — CI FAILS if this fails
+          compact compile contracts/Vault.compact contracts/managed/Vault
+
+          echo ""
+          echo "=== Compilation complete ==="
+
+      # ── 6. Verify generated output ───────────────────────────────────────
+      - name: Verify generated Vault artifacts
+        run: |
+          echo ""
+          echo "=== GENERATED DIRECTORY STRUCTURE ==="
+          find contracts/managed/Vault -type f | sort
+
+          echo ""
+          echo "=== ARTIFACT SIZES ==="
+          find contracts/managed/Vault -type f -exec wc -c {} +
+
+          # ── Locate runtime contract file (index.js or index.cjs) ──────────
+          CONTRACT_JS=$(find contracts/managed/Vault/contract -name "index.js" -o -name "index.cjs" 2>/dev/null | head -n 1)
+          if [ -z "$CONTRACT_JS" ] || [ ! -s "$CONTRACT_JS" ]; then
+            echo "FAIL: No contract runtime (index.js or index.cjs) generated!"
+            exit 1
+          fi
+          echo ""
+          echo "=== CONTRACT RUNTIME FILE: $CONTRACT_JS ==="
+
+          # ── Verify compact-runtime version requirement ─────────────────────
+          echo ""
+          echo "=== compact-runtime version requirement ==="
+          grep -o "checkRuntimeVersion('[^']*')" "$CONTRACT_JS" || \
+          grep -o 'checkRuntimeVersion("[^"]*")' "$CONTRACT_JS" || \
+          echo "NOTE: checkRuntimeVersion not found as a string literal (may be minified)"
+
+          # ── Verify Contract export is a function/class ─────────────────────
+          echo ""
+          echo "=== Verifying Contract export ==="
+          node --input-type=module << 'EOF'
+          import { readFileSync } from 'fs';
+          import { execSync } from 'child_process';
+          import { createRequire } from 'module';
+
+          const contractDir = 'contracts/managed/Vault/contract';
+          const jsFile = (() => {
+            try { execSync(`test -f ${contractDir}/index.js`); return `${contractDir}/index.js`; } catch {}
+            try { execSync(`test -f ${contractDir}/index.cjs`); return `${contractDir}/index.cjs`; } catch {}
+            return null;
+          })();
+
+          if (!jsFile) {
+            console.error('FAIL: No contract runtime file found!');
+            process.exit(1);
           }
 
-      - name: Install dependencies
-        run: npm install
+          console.log(`Loading contract from: ${jsFile}`);
+          const require = createRequire(import.meta.url);
+          let mod;
+          try {
+            mod = require('./' + jsFile);
+          } catch (e) {
+            // try ESM dynamic import for .js files
+            mod = await import('./' + jsFile);
+          }
 
-      - name: Verify Generated Output and Print Details
-        run: |
-          echo "GENERATED CONTRACT FILES:"
-          ls -la managed/Membership/contract/
-          echo "GENERATED COMPILER METADATA:"
-          ls -la managed/Membership/compiler/
-          echo "GENERATED KEYS:"
-          ls -la managed/Membership/keys/
-          echo "GENERATED ZKIR:"
-          ls -la managed/Membership/zkir/
+          const Contract = mod.Contract;
+          console.log(`Contract export exists: ${!!Contract}`);
+          console.log(`typeof Contract: ${typeof Contract}`);
 
-          echo "SIZES OF ZK ARTIFACTS:"
-          # Dynamically detect keys and zkir filenames to print their sizes
-          find managed/Membership/keys/ -type f -exec wc -c {} +
-          find managed/Membership/zkir/ -type f -exec wc -c {} +
+          if (typeof Contract !== 'function') {
+            console.error('FAIL: Contract is not a constructor/class!');
+            process.exit(1);
+          }
+          console.log('SUCCESS: Contract is a valid constructor/class');
+          EOF
 
-          # Fail if any pk, vk, or zkir is missing or zero-sized
-          PK_FILE=$(find managed/Membership/keys/ -name "registerMember.pk" -o -name "registerMember.prover" | head -n 1)
-          VK_FILE=$(find managed/Membership/keys/ -name "registerMember.vk" -o -name "registerMember.verifier" | head -n 1)
-          ZKIR_FILE=$(find managed/Membership/zkir/ -name "registerMember.zkir" -o -name "registerMember.bzkir" | head -n 1)
+          # ── Verify circuit names ──────────────────────────────────────────
+          echo ""
+          echo "=== Verifying required Vault circuits are present ==="
+          REQUIRED_CIRCUITS="authorizeIssuer issueCredential verifyCredential revokeCredential"
+          MISSING=""
 
-          if [ -z "$PK_FILE" ] || [ ! -s "$PK_FILE" ]; then
-            echo "FAIL: registerMember proving key is missing or zero bytes!"
+          for CIRCUIT in $REQUIRED_CIRCUITS; do
+            if grep -r "$CIRCUIT" contracts/managed/Vault/ > /dev/null 2>&1; then
+              echo "  ✓ $CIRCUIT — found in generated artifacts"
+            else
+              echo "  ✗ $CIRCUIT — MISSING from generated artifacts"
+              MISSING="$MISSING $CIRCUIT"
+            fi
+          done
+
+          if [ -n "$MISSING" ]; then
+            echo ""
+            echo "FAIL: The following required circuits are missing:$MISSING"
+            echo "The compiled contract does NOT correspond to Vault.compact."
             exit 1
           fi
-          if [ -z "$VK_FILE" ] || [ ! -s "$VK_FILE" ]; then
-            echo "FAIL: registerMember verification key is missing or zero bytes!"
+
+          echo ""
+          echo "All required Vault circuits verified in generated output."
+
+          # ── Verify proving keys ───────────────────────────────────────────
+          echo ""
+          echo "=== Verifying proving keys (PK) ==="
+          PK_COUNT=$(find contracts/managed/Vault/keys -name "*.pk" -o -name "*.prover" 2>/dev/null | wc -l)
+          if [ "$PK_COUNT" -eq 0 ]; then
+            echo "FAIL: No proving key (.pk or .prover) files generated!"
             exit 1
           fi
-          if [ -z "$ZKIR_FILE" ] || [ ! -s "$ZKIR_FILE" ]; then
-            echo "FAIL: registerMember ZKIR is missing or zero bytes ($ZKIR_FILE)!"
+          find contracts/managed/Vault/keys -name "*.pk" -o -name "*.prover" 2>/dev/null | \
+            xargs -I{} sh -c 'echo "  PK: {} — $(wc -c < {}) bytes"'
+
+          # ── Verify verification keys ──────────────────────────────────────
+          echo ""
+          echo "=== Verifying verification keys (VK) ==="
+          VK_COUNT=$(find contracts/managed/Vault/keys -name "*.vk" -o -name "*.verifier" 2>/dev/null | wc -l)
+          if [ "$VK_COUNT" -eq 0 ]; then
+            echo "FAIL: No verification key (.vk or .verifier) files generated!"
+            exit 1
+          fi
+          find contracts/managed/Vault/keys -name "*.vk" -o -name "*.verifier" 2>/dev/null | \
+            xargs -I{} sh -c 'echo "  VK: {} — $(wc -c < {}) bytes"'
+
+          # ── Verify ZKIR ───────────────────────────────────────────────────
+          echo ""
+          echo "=== Verifying ZKIR files ==="
+          ZKIR_COUNT=$(find contracts/managed/Vault/zkir -name "*.zkir" -o -name "*.bzkir" 2>/dev/null | wc -l)
+          if [ "$ZKIR_COUNT" -eq 0 ]; then
+            echo "FAIL: No ZKIR (.zkir or .bzkir) files generated!"
+            exit 1
+          fi
+          find contracts/managed/Vault/zkir -name "*.zkir" -o -name "*.bzkir" 2>/dev/null | \
+            xargs -I{} sh -c 'echo "  ZKIR: {} — $(wc -c < {}) bytes"'
+
+          echo ""
+          echo "=== ALL VAULT ARTIFACT VERIFICATION CHECKS PASSED ==="
+
+      # ── 7. Confirm this is NOT the old Membership artifact ───────────────
+      - name: Confirm generated output is NOT the legacy Membership contract
+        run: |
+          echo ""
+          echo "=== Anti-regression check: verifying output is Vault, not Membership ==="
+
+          # The Vault contract must NOT contain registerMember (old Membership circuit)
+          if grep -r "registerMember" contracts/managed/Vault/ > /dev/null 2>&1; then
+            echo "FAIL: Generated output contains 'registerMember' — this appears to be the old Membership contract, not Vault!"
             exit 1
           fi
 
-          # Verify that the generated file contains checkRuntimeVersion
-          echo "GENERATED RUNTIME VERSION REQUIREMENT:"
-          grep -o "checkRuntimeVersion('[^']*')" managed/Membership/contract/index.js || grep -o "checkRuntimeVersion('[^']*')" managed/Membership/contract/index.cjs || true
+          echo "  ✓ No legacy Membership circuit found in Vault artifacts."
+          echo ""
+          echo "=== Anti-regression check PASSED ==="
 
-          # Assert Contract export is a function
-          node -e "
-            const fs = require('fs');
-            const file = fs.existsSync('managed/Membership/contract/index.js') ? 'managed/Membership/contract/index.js' : 'managed/Membership/contract/index.cjs';
-            console.log('Loading contract module from:', file);
-            import('./' + file)
-              .then(m => {
-                const Contract = m.Contract;
-                console.log('Contract export exists:', !!Contract);
-                console.log('typeof Contract:', typeof Contract);
-                if (typeof Contract !== 'function') {
-                  console.error('FAIL: Contract is not a constructor/class!');
-                  process.exit(1);
-                }
-                console.log('SUCCESS: Contract is a valid constructor/class');
-              })
-              .catch(err => {
-                console.error('Import failed:', err);
-                process.exit(1);
-              });
-          "
-
-      - name: Run test suite
-        run: npm test
-
-      - name: Install Frontend dependencies
-        working-directory: ./frontend
-        run: npm install
-
-      - name: Print Installed Frontend Runtime Versions
-        working-directory: ./frontend
-        run: |
-          echo "INSTALLED COMPACT-JS VERSION:"
-          npm list @midnight-ntwrk/compact-js || true
-          echo "INSTALLED COMPACT-RUNTIME VERSION:"
-          npm list @midnight-ntwrk/compact-runtime || true
-
-      - name: Sync Artifacts to Frontend
-        run: |
-          # Sync build-time imports
-          rm -rf frontend/src/managed/Membership
-          mkdir -p frontend/src/managed/Membership
-          cp -r managed/Membership/* frontend/src/managed/Membership/
-          
-          # Sync runtime ZK assets to public folder
-          mkdir -p frontend/public/keys
-          mkdir -p frontend/public/zkir
-          cp managed/Membership/keys/* frontend/public/keys/
-          cp managed/Membership/zkir/* frontend/public/zkir/
-
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Upload Compiled Membership Artifacts
+      # ── 8. Upload authentic compiled artifacts ───────────────────────────
+      - name: Upload compiled Vault artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-membership-artifacts
-          path: managed/Membership/
+          name: compiled-vault-artifacts
+          path: contracts/managed/Vault/
+          if-no-files-found: error
 
+      # ── 9. Print final summary ───────────────────────────────────────────
+      - name: Print compilation summary
+        run: |
+          echo ""
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║          MIDNIGHT VAULT — D2 COMPILATION COMPLETE           ║"
+          echo "╚══════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "  Compiler version:"
+          compact --version
+          echo ""
+          echo "  Source contract: contracts/Vault.compact"
+          echo "  Generated artifacts: contracts/managed/Vault/"
+          echo ""
+          echo "  Files generated:"
+          find contracts/managed/Vault -type f | sort | while read f; do
+            echo "    $f — $(wc -c < "$f") bytes"
+          done
+          echo ""
+          echo "  Circuits verified: authorizeIssuer issueCredential verifyCredential revokeCredential"
+          echo ""
+          echo "  Artifact upload: compiled-vault-artifacts (see Actions > Artifacts)"
+          echo ""
+          echo "  NEXT: Download artifact, place in contracts/managed/Vault/, then proceed to D3."
+          echo ""

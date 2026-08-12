@@ -1,0 +1,62 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+export ledger issuers: Map<Bytes<32>, Boolean>;
+export ledger issued: Map<Bytes<32>, Bytes<32>>;
+export ledger revoked: Map<Bytes<32>, Boolean>;
+export ledger verificationCount: Counter;
+
+witness credentialSecret(): Bytes<32>;
+witness credentialType(): Uint<8>;
+witness credentialIssuer(): Bytes<32>;
+
+witness issuerSecret(): Bytes<32>;
+
+export circuit authorizeIssuer(issuerId: Bytes<32>): [] {
+  issuers.insert(disclose(issuerId), disclose(true));
+}
+
+export circuit issueCredential(credentialCommitment: Bytes<32>): [] {
+  const secret = issuerSecret();
+  // domain separator: "vault:issuer"
+  const vault_issuer_domain: Bytes<32> = 0x7661756c743a6973737565720000000000000000000000000000000000000000;
+  const issuerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
+  assert(issuers.lookup(issuerId) == true, "Issuer not active");
+  issued.insert(disclose(credentialCommitment), disclose(issuerId));
+}
+
+export circuit verifyCredential(requiredType: Uint<8>): [] {
+  const secret = credentialSecret();
+  const ctype = credentialType();
+  const issuerId = credentialIssuer();
+
+  // domain separator: "vault:user"
+  const vault_user_domain: Bytes<32> = 0x7661756c743a7573657200000000000000000000000000000000000000000000;
+  const userId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_user_domain]);
+  
+  const ctypeBytes = ctype as Field as Bytes<32>;
+  const commitment = persistentHash<Vector<3, Bytes<32>>>([userId, ctypeBytes, issuerId]);
+  
+  assert(issued.member(commitment) == true, "Credential not issued");
+  assert(issued.lookup(commitment) == issuerId, "Issuer mismatch");
+  assert(issuers.lookup(issuerId) == true, "Issuer deactivated");
+  assert(revoked.member(commitment) == false, "Credential revoked");
+  assert(ctype >= requiredType, "Insufficient tier");
+  
+  disclose(commitment);
+  verificationCount.increment(1);
+}
+
+export circuit revokeCredential(credentialCommitment: Bytes<32>): [] {
+  const secret = issuerSecret();
+  // domain separator: "vault:issuer"
+  const vault_issuer_domain: Bytes<32> = 0x7661756c743a6973737565720000000000000000000000000000000000000000;
+  const callerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
+  
+  assert(issuers.lookup(callerId) == true, "Caller issuer not active");
+  assert(issued.member(credentialCommitment) == true, "Credential not issued");
+  assert(issued.lookup(credentialCommitment) == callerId, "Revocation unauthorized");
+  
+  revoked.insert(disclose(credentialCommitment), disclose(true));
+}
