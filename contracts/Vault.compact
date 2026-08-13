@@ -22,8 +22,9 @@ export circuit issueCredential(credentialCommitment: Bytes<32>): [] {
   // domain separator: "vault:issuer"
   const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
   const issuerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
-  assert(issuers.lookup(issuerId) == true, "Issuer not active");
-  issued.insert(disclose(credentialCommitment), disclose(issuerId));
+  const publicIssuerId = disclose(issuerId);
+  assert(issuers.lookup(publicIssuerId) == true, "Issuer not active");
+  issued.insert(disclose(credentialCommitment), publicIssuerId);
 }
 
 export circuit verifyCredential(requiredType: Uint<8>): [] {
@@ -38,13 +39,15 @@ export circuit verifyCredential(requiredType: Uint<8>): [] {
   const ctypeBytes = ctype as Field as Bytes<32>;
   const commitment = persistentHash<Vector<3, Bytes<32>>>([userId, ctypeBytes, issuerId]);
   
-  assert(issued.member(commitment) == true, "Credential not issued");
-  assert(issued.lookup(commitment) == issuerId, "Issuer mismatch");
-  assert(issuers.lookup(issuerId) == true, "Issuer deactivated");
-  assert(revoked.member(commitment) == false, "Credential revoked");
+  const publicCommitment = disclose(commitment);
+  const publicIssuerId = disclose(issuerId);
+  
+  assert(issued.member(publicCommitment) == true, "Credential not issued");
+  assert(issued.lookup(publicCommitment) == issuerId, "Issuer mismatch");
+  assert(issuers.lookup(publicIssuerId) == true, "Issuer deactivated");
+  assert(revoked.member(publicCommitment) == false, "Credential revoked");
   assert(ctype >= requiredType, "Insufficient tier");
   
-  disclose(commitment);
   verificationCount.increment(1);
 }
 
@@ -54,9 +57,12 @@ export circuit revokeCredential(credentialCommitment: Bytes<32>): [] {
   const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
   const callerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
   
-  assert(issuers.lookup(callerId) == true, "Caller issuer not active");
-  assert(issued.member(credentialCommitment) == true, "Credential not issued");
-  assert(issued.lookup(credentialCommitment) == callerId, "Revocation unauthorized");
+  const publicCallerId = disclose(callerId);
+  const publicCommitment = disclose(credentialCommitment);
   
-  revoked.insert(disclose(credentialCommitment), disclose(true));
+  assert(issuers.lookup(publicCallerId) == true, "Caller issuer not active");
+  assert(issued.member(publicCommitment) == true, "Credential not issued");
+  assert(issued.lookup(publicCommitment) == callerId, "Revocation unauthorized");
+  
+  revoked.insert(publicCommitment, disclose(true));
 }
