@@ -20,7 +20,7 @@ export circuit authorizeIssuer(issuerId: Bytes<32>): [] {
 export circuit issueCredential(credentialCommitment: Bytes<32>): [] {
   const secret = issuerSecret();
   // domain separator: "vault:issuer"
-  const vault_issuer_domain: Bytes<32> = 0x7661756c743a6973737565720000000000000000000000000000000000000000;
+  const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
   const issuerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
   assert(issuers.lookup(issuerId) == true, "Issuer not active");
   issued.insert(disclose(credentialCommitment), disclose(issuerId));
@@ -32,7 +32,7 @@ export circuit verifyCredential(requiredType: Uint<8>): [] {
   const issuerId = credentialIssuer();
 
   // domain separator: "vault:user"
-  const vault_user_domain: Bytes<32> = 0x7661756c743a7573657200000000000000000000000000000000000000000000;
+  const vault_user_domain: Bytes<32> = pad(32, "vault:user");
   const userId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_user_domain]);
   
   const ctypeBytes = ctype as Field as Bytes<32>;
@@ -51,7 +51,7 @@ export circuit verifyCredential(requiredType: Uint<8>): [] {
 export circuit revokeCredential(credentialCommitment: Bytes<32>): [] {
   const secret = issuerSecret();
   // domain separator: "vault:issuer"
-  const vault_issuer_domain: Bytes<32> = 0x7661756c743a6973737565720000000000000000000000000000000000000000;
+  const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
   const callerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
   
   assert(issuers.lookup(callerId) == true, "Caller issuer not active");
