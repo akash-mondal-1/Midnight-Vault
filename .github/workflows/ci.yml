@@ -111,7 +111,11 @@ jobs:
           echo ""
           echo "=== Compilation complete ==="
 
-      # ── 6. Verify generated output ───────────────────────────────────────
+      # ── 6. Install root dependencies (for Node verification script) ───────
+      - name: Install dependencies
+        run: npm install
+
+      # ── 7. Verify generated output ───────────────────────────────────────
       - name: Verify generated Vault artifacts
         run: |
           echo ""
