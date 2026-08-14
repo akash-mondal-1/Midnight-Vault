@@ -11,7 +11,7 @@
 - **Live Preprod Demo:** [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/) *(Live Midnight Vault Application on Preprod)*
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
 - **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
-- **Demo Video:** `[PENDING / TO BE ADDED]`
+- **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
 
 ---
 
@@ -284,6 +284,9 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 - **Bio:** Zero-Knowledge Credential Infrastructure on @MidnightNtwrk. Privacy-preserving issuance, threshold verification & revocation.
 - **Link:** [https://x.com/Mid_nightVault_](https://x.com/Mid_nightVault_)
 
+### MVP Demo Video
+- **Watch Demo:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
+
 ### Demo Video Script (2-4 Minutes)
 1. **0:00 - 0:30**: Introduction, problem of over-disclosure in Web3 ID, Midnight privacy model.
 2. **0:30 - 1:00**: Wallet connection on Preprod & canonical contract overview (`dcef8989...`).
@@ -315,7 +318,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 | **Passing CI & Build Status** | ✅ PASS | Tests: 4/4 passed, Vite: 0 errors |
 | **15+ Meaningful Commits** | ✅ PASS | 87+ meaningful commits on `main` |
 | **Product X Profile** | ✅ PASS | [@Mid_nightVault_](https://x.com/Mid_nightVault_) |
-| **Demo Video** | ⏳ PENDING | *[PENDING / TO BE ADDED]* |
+| **Demo Video** | ✅ PASS | [Watch MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link) |
 
 ---
 
