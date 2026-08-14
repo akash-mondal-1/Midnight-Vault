@@ -1,414 +1,307 @@
-# MidnightVault
+# Midnight Vault
 
-[![Midnight CI](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml/badge.svg)](https://github.com/akash-mondal-1/Mid-night-Vault-/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/Tests-4%20Passed-brightgreen)](./tests/)
-[![Node](https://img.shields.io/badge/Node-22-green)](https://nodejs.org/)
+[![Midnight CI](https://github.com/akash-mondal-1/Midnight-Vault/actions/workflows/ci.yml/badge.svg)](https://github.com/akash-mondal-1/Midnight-Vault/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen)](./tests/)
 [![Compact](https://img.shields.io/badge/Compact-0.31.1-blue)](https://docs.midnight.network/)
-[![Network](https://img.shields.io/badge/Network-Preprod-purple)](https://indexer.preprod.midnight.network/api/v4/graphql)
+[![Network](https://img.shields.io/badge/Network-Midnight%20Preprod-purple)](https://indexer.preprod.midnight.network/api/v4/graphql)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Private Allowlist Access** — prove membership without revealing identity. Built on Midnight Network using zero-knowledge proofs.
+> **Privacy-preserving zero-knowledge credential issuance, verification, and revocation platform built on Midnight Network.**
 
-**Live Demo:** <https://mid-night-vault.vercel.app/>  
-**Demo Video:** <https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L>  
-**GitHub:** <https://github.com/akash-mondal-1/Mid-night-Vault->
+- **Live Preprod Demo:** [https://mid-night-vault.vercel.app/](https://mid-night-vault.vercel.app/)
+- **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
+- **Product X (Twitter):** [@MidnightVault](https://x.com/MidnightVault)
+- **Demo Video:** [Watch Demonstration](https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L)
 
 ---
 
-## 🟣 Deployed Smart Contract — Midnight Preprod Testnet
+## 1. Overview & Problem Statement
 
-| Field | Value |
+Modern credential systems (KYC, accreditation, membership tiers, employee badges) suffer from a fundamental privacy flaw: **over-disclosure**. To prove compliance or qualification, users must present raw identity documents, exposing full names, dates of birth, exact tiers, and issuing authority signatures. Furthermore, existing on-chain identity systems make credential presentation trackable across dApps, creating persistent linkability.
+
+### The Midnight Vault Solution
+**Midnight Vault** implements a complete zero-knowledge credential lifecycle leveraging Midnight's Compact smart contract language and zero-knowledge ledger:
+- **Private Witness Model:** Holder secrets and credential attributes remain strictly local to the browser/wallet.
+- **Zero-Knowledge Thresholds:** Prove `tier >= requiredTier` without disclosing the exact tier.
+- **Selective Disclosure:** An observer verifies that a credential was issued by an authorized issuer and has not been revoked, without learning the user's identity or secret.
+- **On-Chain Revocation:** Issuers retain authority to revoke credentials without invalidating the zero-knowledge privacy guarantees for remaining holders.
+
+---
+
+## 2. Canonical Deployed Smart Contract (Midnight Preprod)
+
+The Midnight Vault smart contract is deployed and verified on the official **Midnight Preprod Testnet**:
+
+| Parameter | Value |
 | :--- | :--- |
-| **Contract Address** | `mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8q88ds` |
-| **Network** | **Midnight Preprod Testnet** |
-| **Network ID** | `preprod` (set via `setNetworkId('preprod')`) |
-| **Contract Name** | `Membership` |
-| **Language** | Compact v0.31.1 |
-| **Circuit** | `registerMember(expectedSecret: Field)` |
-| **Private Witness** | `membershipSecret()` — never transmitted |
-| **Public Ledger** | `registeredMembersCount` (Counter) |
-| **Indexer** | `https://indexer.preprod.midnight.network/api/v4/graphql` |
-| **Deploy Function** | `deployContract()` from `@midnight-ntwrk/midnight-js-contracts` |
-| **Deployed By** | `mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8peh7d` |
+| **Contract Address** | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
+| **Deployment Transaction** | `b7746bd88c14c8df5102881b5be0cb7957dcfa6a56fd90e8337c92a1086fc4d9` |
+| **Deployment Block** | `2,088,740` |
+| **Network ID** | `preprod` |
+| **Language & Toolchain** | Compact `v0.31.1` (`pragma language_version >= 0.23.0`) |
+| **Indexer Endpoint** | `https://indexer.preprod.midnight.network/api/v4/graphql` |
+| **Proof Server (Prover)** | `https://api-preprod.1am.xyz` (ProofStation by 1AM) |
 
-### Verify On-Chain
-
-Query the deployed contract state via the Midnight Preprod Indexer (v4 API supports `contractAction`):
-
+### Query Contract State via GraphQL
 ```graphql
 # POST https://indexer.preprod.midnight.network/api/v4/graphql
-{
-  contractAction(address: "1a95481fb484497c7815ad9df9cf3d4cde905dd625983b09f0a25320eaaa35d2") {
+query {
+  contractAction(address: "dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f") {
     state
   }
 }
 ```
 
-### Deployment Terminal Output
-
-The contract was deployed using the official Midnight SDK:
-- `deployContract()` from `@midnight-ntwrk/midnight-js-contracts`
-- `setNetworkId('preprod')` from `@midnight-ntwrk/midnight-js-network-id`
-
-![Deployment Terminal Output](assets/deploy-output.png)
-
 ---
 
-## Level 1 — New Moon (Approved ✅)
+## 3. Verified End-to-End On-Chain Protocol Lifecycle
 
-Level 1 (New Moon) submission was previously reviewed and approved.
+The full 6-stage lifecycle has been executed and confirmed on Midnight Preprod:
 
----
-
-## Level 2 — Waxing Crescent (Approved ✅)
-
-Level 2 (Waxing Crescent) submission was reviewed and approved.
-
-- [x] **Wallet connect / disconnect** — Lace + 1AM wallet via `@midnight-ntwrk/dapp-connector-api`
-- [x] **`deployContract(...)`** — genuine SDK call with compiled Membership contract
-- [x] **`setNetworkId('preprod')`** — called in `ContractContext.tsx` on module load + before every circuit call
-- [x] **Circuit called from frontend** — `registerMember` via DApp Connector API
-- [x] **Observable privacy behavior** — `witness membershipSecret()` never leaves browser
-- [x] **Contract deployed to Preprod** — `mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8q88ds`
-- [x] **Deployment authenticity** — `deployContract()` + `setNetworkId()` calls verified in source
-- [x] **Frontend contract interaction** — `findDeployedContract()` + circuit execution
-- [x] **41 meaningful commits** (≥ 8 required)
-- [x] **Live demo:** <https://mid-night-vault.vercel.app/>
-- [x] **Demo video:** <https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L>
-
----
-
-## Submission Checklist — Level 3 (First Quarter)
-
-- [x] **Fully functional dApp** using Midnight's privacy model
-- [x] **4 tests passing** (≥ 3 required) — see [Test](#test)
-- [x] **CI/CD pipeline** running on every push (actual Compact compilation + contract verification + test + frontend build)
-- [x] **Approved idea:** **Private Allowlist Access** — see [Product Proposal](#product-proposal)
-- [x] **41 meaningful commits** (≥ 10 required)
-- [x] **Privacy model documented** — see [Privacy Model](#privacy-model)
-- [x] **Product proposal:** [`PROPOSAL.md`](./PROPOSAL.md)
-- [x] **Live demo:** <https://mid-night-vault.vercel.app/>
-- [x] **Demo video:** <https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L>
-- [x] **Deployed contract details** — see [Deployed Smart Contract](#-deployed-smart-contract--midnight-preprod-testnet)
-- [x] **On-chain interaction** — `registerMember` circuit called via DApp Connector after wallet connect
-
----
-
-## deployContract() & setNetworkId() — Code Evidence
-
-### setNetworkId (called on module load in ContractContext)
-
-```typescript
-// frontend/src/context/ContractContext.tsx
-
-// Official Midnight SDK — setNetworkId MUST be called before any contract interaction
-import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-
-// Active network ID — configures the global Midnight SDK network context
-const ACTIVE_NETWORK_ID = import.meta.env?.VITE_NETWORK_ID ?? 'preprod';
-
-// Call setNetworkId immediately on module load — required by the SDK
-setNetworkId(ACTIVE_NETWORK_ID);
-console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') called — network context initialized`);
+```mermaid
+graph TD
+    A["1. Contract Deployment - Block: 2,088,740"] --> B["2. authorizeIssuer() - Tx: 2ed0ee11... (Block 2,103,199)"]
+    B --> C["3. issueCredential() - Tx: 2a47b7ad... (Block 2,103,640)"]
+    C --> D["4. verifyCredential() [POSITIVE] - Tx: 807bde13... (Block 2,103,731) - STATUS: PROVED"]
+    D --> E["5. revokeCredential() - Tx: 1f61a1a6... (Block 2,103,835)"]
+    E --> F["6. verifyCredential() [NEGATIVE] - Circuit Rejection: 'Credential revoked' - STATUS: REJECTED"]
 ```
 
-### deployContract (called in deploy flow)
+### Stage-by-Stage Verification Records:
 
-```typescript
-// scripts/deploy.ts + frontend/src/context/ContractContext.tsx
+| # | Lifecycle Step | Function / Circuit | Transaction Hash / Result | Block Number | On-Chain State Impact |
+| :- | :--- | :--- | :--- | :--- | :--- |
+| **1** | **Deployment** | `deployContract()` | `b7746bd88c14c8df5102881b5be0cb7957dcfa6a56fd90e8337c92a1086fc4d9` | `2,088,740` | Contract instantiated on Preprod |
+| **2** | **Authorize Issuer** | `authorizeIssuer()` | `2ed0ee11841d216f3d68aaa883edd368302239c1dfd3ede3d1d5cef4de68e86b` | `2,103,199` | Added issuer commitment `99967b55...` to `issuers` map |
+| **3** | **Issue Credential** | `issueCredential()` | `2a47b7ad622a932f7a7cf863344470f0cb01ab968dc8ca15aae6df9214264cd9` | `2,103,640` | Stored credential commitment `30b3866d...` in `issued` map |
+| **4** | **Verify (Positive)** | `verifyCredential(1)` | `807bde130daccf2b5a04b870676a6898051a02a4a539c0da51ba3775abaa2c04` | `2,103,731` | Verified `tier >= 1`, incremented `verificationCount` counter |
+| **5** | **Revoke Credential** | `revokeCredential()` | `1f61a1a632adec9aacb1fc70da964e9c3eb33f10548b34c4cbefdd958fa8710d` | `2,103,835` | Inserted `30b3866d...` into `revoked` map with value `true` |
+| **6** | **Verify (Negative)** | `verifyCredential(1)` | **Circuit-Level Rejection** (`CompactError: failed assert: Credential revoked`) | *N/A (Pre-submission)* | Transaction safely aborted before submission; UI displays failed verification |
 
-import { deployContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { setNetworkId }   from '@midnight-ntwrk/midnight-js-network-id';
-
-// Step 1 — mandatory: set network context
-setNetworkId('preprod');
-
-// Step 2 — deploy the compiled Membership contract
-const deployed = await deployContract(providers, {
-  compiledContract: compiledContract,    // from managed/Membership/contract/index.js
-  args: [],                              // no constructor args (Counter initializes to 0)
-  privateStateId: 'membership-state',   // unique state identifier
-  initialPrivateState: {},              // no private state (witness is computed at call time)
-});
-
-const contractAddress = deployed.deployTxData.public.contractAddress;
-```
-
-### findDeployedContract (called when registering members)
-
-```typescript
-// frontend/src/context/ContractContext.tsx — registerMember()
-
-import { findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
-
-// Re-assert network ID before every circuit call
-setNetworkId(ACTIVE_NETWORK_ID);
-
-const contract = await findDeployedContract(providers, {
-  contractAddress: PREPROD_CONTRACT_ADDRESS,  // on-chain address
-  contractConfig: contractDef,                // compiled circuit definition
-});
-
-// Execute the ZK circuit — generates a proof and submits to Midnight
-const tx = await contract.callTx.registerMember(secret);
-```
+> **Technical Note on Negative Verification**: The final post-revocation verification was intentionally rejected during client-side circuit evaluation prior to transaction construction. Compact assertions protect users and the network by halting execution when conditions (e.g. `assert(revoked.member(publicCommitment) == false)`) fail.
 
 ---
 
-## Privacy Model
+## 4. Privacy & Zero-Knowledge Architecture
 
-| Element | Public | Private |
-| :--- | :--- | :--- |
-| **Data** | `registeredMembersCount` | `membershipSecret` |
-| **Location** | On-chain, readable by all | Local browser only — never transmitted |
-| **What it proves** | Someone registered | User knows the secret — without revealing it |
-| **ZK Proof** | Verified on-chain | Generated locally, witness discarded |
+### Deterministic Cryptographic Commitments
+The protocol uses Compact's native `persistentHash` with domain separation strings to prevent cross-protocol collision and pre-image recovery:
 
-**Observer sees:** Counter increments + a ZK proof transaction on-chain.  
-**Observer cannot see:** The secret value, the user's identity, or any witness input.
+1. **Issuer Identification**:
+   $$	ext{issuerId} = 	ext{persistentHash}([	ext{issuerSecret}, 	ext{pad}(32, 	ext{"vault:issuer"})])$$
+   *Commitment*: `99967b5594ee4cc8ec0c31f8cbc02be10089e16eb269ba92f4b66d6b11431953`
+
+2. **User Subject ID**:
+   $$	ext{userId} = 	ext{persistentHash}([	ext{userSecret}, 	ext{pad}(32, 	ext{"vault:user"})])$$
+   *Private Subject ID*: `111d8ee0fb801e73ea3ac765347ac372a22d7164c8f8d250d862ed2f21a87411`
+
+3. **Credential Commitment**:
+   $$	ext{commitment} = 	ext{persistentHash}([	ext{userId}, 	ext{ctypeBytes}, 	ext{issuerId}])$$
+   *Commitment*: `30b3866deff3cda30eddf79b4ba6092bbfa491881a2a7c41740ee55ecc26f6b9`
+
+### Data Visibility Matrix
+
+| Data Item | Stored On-Chain? | Publicly Visible? | Role in Proving |
+| :--- | :---: | :---: | :--- |
+| `issuerSecret` | ❌ No | ❌ Private | Private witness in `authorizeIssuer`, `issueCredential`, `revokeCredential` |
+| `userSecret` | ❌ No | ❌ Private | Private witness in `verifyCredential` |
+| `userId` | ❌ No | ❌ Private | Derived within ZK circuit |
+| `credentialType` (Tier) | ❌ No | ❌ Private | Private witness evaluated against public `requiredType` |
+| `credentialCommitment` | ✅ Yes | ✅ Public (Disclosed) | Stored in `issued` and `revoked` ledger maps |
+| `issuerId` | ✅ Yes | ✅ Public (Disclosed) | Stored in `issuers` ledger map |
+| `requiredType` | ❌ Ephemeral | ✅ Public | Public argument passed to `verifyCredential` circuit |
+
+---
+
+## 5. Smart Contract Source (`contracts/Vault.compact`)
 
 ```compact
-witness membershipSecret(): Field;  // ← stays in browser, NEVER sent to network
+pragma language_version >= 0.23.0;
 
-export circuit registerMember(expectedSecret: Field): [] {
-  const secret = membershipSecret();     // private — loaded from browser only
-  assert(secret == expectedSecret,       // ZK assertion — proved without revealing
-    "Invalid membership secret provided");
-  disclose(1);                           // only the success signal is public
-  registeredMembersCount.increment(1);   // public counter increments on-chain
+import CompactStandardLibrary;
+
+export ledger issuers: Map<Bytes<32>, Boolean>;
+export ledger issued: Map<Bytes<32>, Bytes<32>>;
+export ledger revoked: Map<Bytes<32>, Boolean>;
+export ledger verificationCount: Counter;
+
+witness issuerSecret(): Bytes<32>;
+witness credentialSecret(): Bytes<32>;
+witness credentialIssuer(): Bytes<32>;
+witness credentialType(): Uint<8>;
+
+export circuit authorizeIssuer(issuerId: Bytes<32>): [] {
+  const secret = issuerSecret();
+  const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
+  const derivedIssuerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
+  
+  assert(derivedIssuerId == issuerId, "Issuer secret mismatch");
+  issuers.insert(disclose(issuerId), disclose(true));
+}
+
+export circuit issueCredential(credentialCommitment: Bytes<32>): [] {
+  const secret = issuerSecret();
+  const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
+  const issuerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
+  
+  const publicIssuerId = disclose(issuerId);
+  assert(issuers.lookup(publicIssuerId) == true, "Issuer not active");
+  
+  issued.insert(disclose(credentialCommitment), publicIssuerId);
+}
+
+export circuit verifyCredential(requiredType: Uint<8>): [] {
+  const secret = credentialSecret();
+  const ctype = credentialType();
+  const issuerId = credentialIssuer();
+
+  const vault_user_domain: Bytes<32> = pad(32, "vault:user");
+  const userId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_user_domain]);
+  
+  const ctypeBytes = ctype as Field as Bytes<32>;
+  const commitment = persistentHash<Vector<3, Bytes<32>>>([userId, ctypeBytes, issuerId]);
+  
+  const publicCommitment = disclose(commitment);
+  const publicIssuerId = disclose(issuerId);
+  
+  assert(issued.member(publicCommitment) == true, "Credential not issued");
+  assert(issued.lookup(publicCommitment) == issuerId, "Issuer mismatch");
+  assert(issuers.lookup(publicIssuerId) == true, "Issuer deactivated");
+  assert(revoked.member(publicCommitment) == false, "Credential revoked");
+  assert(ctype >= requiredType, "Insufficient tier");
+  
+  verificationCount.increment(1);
+}
+
+export circuit revokeCredential(credentialCommitment: Bytes<32>): [] {
+  const secret = issuerSecret();
+  const vault_issuer_domain: Bytes<32> = pad(32, "vault:issuer");
+  const callerId = persistentHash<Vector<2, Bytes<32>>>([secret, vault_issuer_domain]);
+  
+  const publicCallerId = disclose(callerId);
+  const publicCommitment = disclose(credentialCommitment);
+  
+  assert(issuers.lookup(publicCallerId) == true, "Caller not authorized");
+  assert(issued.member(publicCommitment) == true, "Credential does not exist");
+  assert(issued.lookup(publicCommitment) == publicCallerId, "Not issuer of credential");
+  assert(revoked.member(publicCommitment) == false, "Already revoked");
+  
+  revoked.insert(publicCommitment, disclose(true));
 }
 ```
 
 ---
 
-## Wallet Integration — Lace + 1AM
+## 6. Technology Stack
 
-Dual wallet support via `@midnight-ntwrk/dapp-connector-api` v4:
-
-```typescript
-// Lace Wallet — injected at window.midnight.mnLace
-const connector = window.midnight.mnLace;
-const walletApi  = await connector.enable('preprod');     // setNetworkId used here too
-const { address } = await walletApi.state();
-
-// 1AM Wallet — injected at window.midnight['1am']
-const am1Connector = window.midnight['1am'];
-const am1Api       = await am1Connector.enable('preprod');
-```
-
-**Wallet selection modal:** Users choose between 1AM (faster WASM-native proving) or Lace.  
-**Installation guides** shown when neither wallet is detected.
+- **Smart Contracts:** Compact `0.31.1` (`compactc`)
+- **ZK & Cryptographic Runtime:** `@midnight-ntwrk/compact-runtime` `^0.16.0`, `@midnight-ntwrk/compact-js` `2.5.1`
+- **SDK & DApp Connector:** `@midnight-ntwrk/dapp-connector-api` `4.0.1`, `@midnight-ntwrk/midnight-js-contracts` `4.1.1`
+- **Frontend Framework:** React 18, Vite 5, Tailwind CSS, Lucide React, Framer Motion
+- **Prover Infrastructure:** ProofStation by 1AM (`https://api-preprod.1am.xyz`) & Official Midnight Proof Server fallback
+- **Wallets Supported:** 1AM Wallet (recommended, native proof support), Lace Wallet
 
 ---
 
-### 💡 Complete Wallet & DUST Setup Guide (Lace vs 1AM)
+## 7. Installation & Local Setup
 
-> **Important Note for Developers & Judges**: Midnight uses a novel **DUST gas model** for zero-knowledge proof transactions. Follow these steps to ensure smooth on-chain interactions.
+### Prerequisites
+- **Node.js**: `v20.x` or `v22.x`
+- **npm**: `v10+`
+- **Browser Wallet**: 1AM Wallet extension (or Lace Beta extension) configured for **Midnight Preprod**.
 
-#### 1. Wallet Recommendation: 1AM Wallet vs Lace Wallet
-- **1AM Wallet (Recommended)**: Includes built-in **ProofStation DUST sponsorship**, instant WASM-native ZK proving, and a dedicated **Your DUST** monitoring dashboard.
-- **Lace Wallet**: Official Midnight browser extension supporting Preview/Preprod testnets.
-
-#### 2. How Midnight DUST Works
-On Midnight Network, zero-knowledge transactions require **DUST** tokens to pay for proof verification. DUST is generated directly from unshielded `$tNIGHT` tokens.
-
-```text
-[Faucet] ──> Request 5,000 $tNIGHT (Unshielded)
-                 │
-                 ▼
-[Wallet] ──> Click "Generate DUST" from $tNIGHT
-                 │
-                 ▼
-[Maturity] ──> Pending Maturity (MATURING) ──> Spendable Balance (READY)
-                 │
-                 ▼
-[MidnightVault] ──> Sign ZK Proof & Deploy Smart Contract on-chain
+### Step 1: Clone Repository
+```bash
+git clone https://github.com/akash-mondal-1/Midnight-Vault.git
+cd Midnight-Vault
 ```
 
-#### 3. Step-by-Step Onboarding for Testing
-1. **Get Testnet Tokens**: Copy your wallet's **Unshielded Address** and request testnet tokens from the Midnight Faucet:
-   - Primary: <https://faucet.preprod.midnight.network/>
-2. **Register for DUST Generation**:
-   - Open 1AM / Lace Wallet $\rightarrow$ Navigate to **DUST Overview**.
-   - Click **Generate DUST** and register your `$tNIGHT` UTXOs.
-3. **Wait for DUST Maturity**:
-   - Newly generated DUST undergoes a brief **Maturity Period** (`MATURING` $\rightarrow$ `READY`).
-   - Once DUST shows **Available / Ready**, open [MidnightVault](https://mid-night-vault.vercel.app/) $\rightarrow$ Connect Wallet $\rightarrow$ Click **Deploy New Contract Instance** or **Execute ZK Circuit** to sign ZK proofs!
+### Step 2: Install Dependencies
+```bash
+# Install root dependencies
+npm install
 
----
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+```
 
-## Test
+### Step 3: Configure Environment Variables
+Create or verify `frontend/.env`:
+```env
+VITE_NETWORK_ID=preprod
+VITE_CONTRACT_ADDRESS=dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f
+VITE_INDEXER_URI=https://indexer.preprod.midnight.network/api/v4/graphql
+VITE_INDEXER_WS_URI=wss://indexer.preprod.midnight.network/api/v4/graphql/ws
+VITE_PROOF_SERVER_URI=https://proof-server.preprod.midnight.network
+```
 
+### Step 4: Run Tests
 ```bash
 npm test
 ```
 
-4 tests pass:
-
-- ✔ should verify deployment and initial state
-- ✔ should accept a valid private witness and update the ledger
-- ✔ should properly increment public ledger upon subsequent registrations
-- ✔ should fail with expected error if private witness is incorrect
-
----
-
-## CI/CD
-
-[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs on every push to `main`:
-
-1. Checkout + Node.js v22 setup
-2. Install Compact toolchain & pin version `0.31.1`
-3. Real reproducible Compact compilation: `compact compile contracts/Membership.compact managed/Membership`
-4. Assert generated contract constructor (`typeof Contract === 'function'`) and verify non-zero ZK proving/verifying keys & ZKIR
-5. `npm test` — 4-test Jest suite
-6. `cd frontend && npm install && npm run build`
-7. Upload compiled artifacts via `actions/upload-artifact@v4`
-
----
-
-## Deploy
-
-### Full Deployment (Node.js + Docker Proof Server)
-
+### Step 5: Start Development Server
 ```bash
-# 1. Start proof server
-docker-compose up -d
-
-# 2. Set wallet seed
-echo "WALLET_SEED=your-seed-phrase" >> .env
-
-# 3. Deploy
-npm run deploy:preprod
+cd frontend
+npm run dev
 ```
-
-### Deployer (from deployer/ directory)
-
-```bash
-cd deployer
-npm install
-npm run network preprod       # set active network
-npm run setup                # wallet setup + fund
-npm run deploy               # genuine deployContract() call
-```
-
-**Deployed Contract Address:**
-```
-mn_addr_preprod1fhjwjadlhuuhuwt3ggg8prq4dw0cpmfmntuzv2dq6ej3v2m77s9q8q88ds
-```
-
-**Network:** Midnight Preprod Testnet  
-**tNight Balance:** 5,000 tNight (funded via faucet in both Lace and 1AM wallets)  
-**Faucet:** <https://faucet.preprod.midnight.network/>  
-**Indexer:** <https://indexer.preprod.midnight.network/api/v4/graphql>
-
-![Deploy Terminal Output](assets/deploy-output.png)
+Open `http://localhost:3000` in your browser.
 
 ---
 
-## Architecture
+## 8. Wallet Onboarding & DUST Gas Setup
 
-```text
-User Browser
-  └── wallet connect (Lace or 1AM via window.midnight[...])
-       └── DApp Connector API (enable('preprod'))
-            ├── setNetworkId('preprod')           ← @midnight-ntwrk/midnight-js-network-id
-            ├── getConfiguration()                 → indexer + proof server URIs
-            ├── getShieldedAddresses()             → coin key + encryption key
-            └── Contract Interaction:
-                 ├── deployContract(providers, {   ← @midnight-ntwrk/midnight-js-contracts
-                 │     compiledContract,
-                 │     args: [],
-                 │     privateStateId: 'membership-state',
-                 │     initialPrivateState: {}
-                 │   })
-                 └── findDeployedContract(providers, {
-                       contractAddress,
-                       contractConfig,
-                     })
-                     └── contract.callTx.registerMember(secret)
-                          ├── membershipSecret witness  (private — stays in browser)
-                          ├── ZK proof generated        (via proof server)
-                          ├── registeredMembersCount++  (public ledger on-chain)
-                          └── disclose(1)               (public event on-chain)
-```
+Midnight transactions require **DUST** tokens to pay for zero-knowledge verification gas.
+
+1. **Request Testnet $tNIGHT**:
+   - Request `$tNIGHT` tokens from the [Midnight Preprod Faucet](https://faucet.preprod.midnight.network/).
+2. **Generate DUST**:
+   - In 1AM Wallet or Lace, navigate to **DUST Management**.
+   - Select **Generate DUST** using your unshielded `$tNIGHT` balance.
+3. **Wait for DUST Maturity**:
+   - Newly generated DUST undergoes a brief maturation window before becoming available for signing transactions.
+4. **Interact**:
+   - Connect your wallet on Midnight Vault and execute zero-knowledge proofs seamlessly.
 
 ---
 
-## Quick Start
+## 9. CI/CD Pipeline
 
-```bash
-git clone https://github.com/akash-mondal-1/Mid-night-Vault-
-npm install
-cd frontend && npm install && npm run dev    # http://localhost:5173
-```
-
-**Requirements:** Node.js v22, Lace or 1AM wallet extension (set to Preprod network)
+The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes on every push and pull request to `main`:
+1. **Compact Contract Compilation**: Installs the genuine Compact `0.31.1` compiler on Ubuntu, compiles `contracts/Vault.compact`, verifies all generated artifacts (PK, VK, binary ZKIR), and asserts anti-regression rules.
+2. **Automated Testing**: Runs unit test suites validating credential protocol invariants.
+3. **Frontend Production Build**: Installs frontend packages and verifies clean `vite build` compilation with zero TypeScript errors.
 
 ---
 
-## Structure
+## 10. Product X (Twitter) & Demo Video
 
-```text
-contracts/Membership.compact           # ZK smart contract (Compact v0.31.1)
-managed/Membership/                    # Compiled artifacts (generated in CI)
-  contract/index.js                    # JS implementation
-  compiler/contract-info.json          # Circuit metadata
-  keys/registerMember.prover           # Proving key
-  keys/registerMember.verifier         # Verification key
-  zkir/registerMember.zkir             # ZK IR circuit
-scripts/deploy.ts                      # Genuine deployContract() deployment script
-deployer/src/deploy.ts                 # Full wallet-SDK deployer (Node.js)
-frontend/src/
-  context/WalletContext.tsx            # Dual wallet state (Lace + 1AM)
-  context/ContractContext.tsx          # setNetworkId + deployContract + findDeployedContract
-  lib/midnight.ts                      # DApp Connector API integration
-  lib/midnight-providers.ts            # Provider initialization
-  components/ui/WalletConnectModal.tsx # Dual wallet connect modal
-tests/membership.test.ts               # 4-test Jest suite
-.github/workflows/ci.yml              # CI/CD compilation & testing pipeline
-PROPOSAL.md                            # Product proposal: Private Allowlist Access
-```
+### Product X Profile
+- **Handle:** [@MidnightVault](https://x.com/MidnightVault)
+- **Profile Name:** Midnight Vault
+- **Bio:** Zero-Knowledge Credential Infrastructure on @MidnightNtwrk. Privacy-preserving issuance, threshold verification & revocation.
+- **Link:** [https://x.com/MidnightVault](https://x.com/MidnightVault)
+
+### Demo Video Script (2-4 Minutes)
+1. **0:00 - 0:30**: Introduction, problem of over-disclosure in Web3 ID, Midnight privacy model.
+2. **0:30 - 1:00**: Wallet connection on Preprod & canonical contract overview (`dcef8989...`).
+3. **1:00 - 1:45**: Issuer flow — Authorizing an issuer and issuing a Tier 1 credential commitment.
+4. **1:45 - 2:30**: Holder flow — Generating local ZK proof and verifying `Tier >= 1` on-chain without revealing identity.
+5. **2:30 - 3:15**: Revocation flow — Issuer revokes the credential; proving the negative path where verification is rejected.
+6. **3:15 - 3:45**: Preprod Explorer & GraphQL Indexer proof inspection.
 
 ---
 
-## Product Proposal
+## 11. Security & Privacy Considerations
 
-### Selected Idea: Private Allowlist Access
+- **Private State Confidentiality**: Secrets (`issuerSecret`, `userSecret`, `credentialType`) are held exclusively in browser memory and passed via private witness functions during local WASM proving.
+- **Linkability**: In this baseline implementation, public commitments are published to the ledger. Future iterations can introduce nullifier sets for unlinkable multi-presentation.
+- **Circuit-Level Validation**: All invariants (authorization, active status, threshold eligibility, revocation) are cryptographically enforced inside ZK circuits.
 
-> Prove membership without revealing identity.
+---
 
-### The Ecosystem Gap
+## 12. License
 
-Every Web3 allowlist today is a public list of wallet addresses. Anyone can scrape it, correlate it with on-chain activity, and deanonymize members. There is no native mechanism to gate access without creating a privacy honeypot.
-
-### What MidnightVault Solves
-
-MidnightVault lets a user prove they belong to an allowlist using a **zero-knowledge proof of secret knowledge** — the user's address, wallet, and credential are never published. Only the mathematical fact of validity is recorded on-chain.
-
-| Who | What They Learn |
-| :--- | :--- |
-| Smart contract / dApp | ✅ Valid proof received — grant access |
-| Blockchain observer | ✅ Someone proved membership (counter +1) |
-| Attacker / analyst | ❌ Nothing — no address, no secret, no identity |
-
-### Privacy Mechanism
-
-- The `membershipSecret` is declared as a **`witness`** in the Compact circuit — it never leaves the user's browser
-- The circuit asserts the secret matches server-side expectation **before** generating the proof
-- The network receives only a ZK proof; the secret is provably never transmitted
-- `disclose(1)` emits only a binary success signal — nothing more
-
-### Real-World Applications
-
-- **NFT allowlists** — prove you're on the mint list without revealing which wallet you'll use
-- **DeFi protocol access gates** — prove KYC/AML credential validity without submitting documents on-chain
-- **Private DAOs** — prove membership for governance voting without linking identity to vote
-- **Enterprise B2B** — prove partner status to trigger smart contract flows without revealing business relationships
-
-### Roadmap for Higher Levels
-
-- Replace shared secret with **Merkle-tree based membership proofs** (individual credentials, not shared secret)
-- Add **credential expiry** — time-bounded access without re-revealing identity
-- Multi-tier allowlists — prove tier level (e.g. gold/silver) without revealing which tier boundary you crossed
-- Cross-contract composability — other dApps query MidnightVault as a privacy oracle
-
-See full proposal: [`PROPOSAL.md`](./PROPOSAL.md)
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.

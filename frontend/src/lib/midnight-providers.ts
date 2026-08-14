@@ -20,8 +20,7 @@ export const fromHex = (hex: string): Uint8Array => {
   return new Uint8Array(Buffer.from(clean, 'hex'));
 };
 
-// Custom ZK Config Provider that supports multiple file extension conventions (.pk / .prover, .vk / .verifier, .zkir / .bzkir)
-// This prevents 404 retries and 2-3 minute timeouts when fetching circuit artifacts.
+// Custom ZK Config Provider prioritizing binary artifacts (.prover, .verifier, .bzkir)
 class CustomZkConfigProvider extends FetchZkConfigProvider {
   private async fetchWithFallback(
     path: string,
@@ -35,6 +34,10 @@ class CustomZkConfigProvider extends FetchZkConfigProvider {
         console.log(`[MidnightVault] Fetching ZK artifact from: ${url}`);
         const response = await (this as any).fetchFunc(url, { method: 'GET' });
         if (response.ok) {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('text/html')) {
+            throw new Error('Vite SPA HTML fallback detected instead of ZK artifact');
+          }
           console.log(`[MidnightVault] ✓ Found ZK artifact at: ${url}`);
           return responseType === 'text'
             ? await response.text()
@@ -48,15 +51,15 @@ class CustomZkConfigProvider extends FetchZkConfigProvider {
   }
 
   override async getProverKey(circuitId: string) {
-    return this.fetchWithFallback('keys', circuitId, ['.pk', '.prover'], 'arraybuffer').then(createProverKey);
+    return this.fetchWithFallback('keys', circuitId, ['.prover', '.pk'], 'arraybuffer').then(createProverKey);
   }
 
   override async getVerifierKey(circuitId: string) {
-    return this.fetchWithFallback('keys', circuitId, ['.vk', '.verifier'], 'arraybuffer').then(createVerifierKey);
+    return this.fetchWithFallback('keys', circuitId, ['.verifier', '.vk'], 'arraybuffer').then(createVerifierKey);
   }
 
   override async getZKIR(circuitId: string) {
-    return this.fetchWithFallback('zkir', circuitId, ['.zkir', '.bzkir'], 'arraybuffer').then(createZKIR);
+    return this.fetchWithFallback('zkir', circuitId, ['.bzkir', '.zkir'], 'arraybuffer').then(createZKIR);
   }
 }
 
@@ -96,7 +99,7 @@ const privateStateProviderInstance = createInMemoryPrivateStateProvider();
 
 export const initializeProviders = async (
   connectedAPI: ConnectedAPI,
-  networkId: string = 'preview'
+  networkId: string = 'preprod'
 ): Promise<MidnightProviders> => {
   // Set the global network ID
   setNetworkId(networkId);
@@ -104,12 +107,12 @@ export const initializeProviders = async (
   // Get Lace configuration and shielded addresses
   const config = await connectedAPI.getConfiguration();
   
-  // Try to use proverServerUri from wallet config, then env var, then fallback to preview default
+  // Try to use proverServerUri from wallet config, then env var, then fallback to preprod default
   const envProofServer = (import.meta as any).env?.VITE_PROOF_SERVER_URI;
   const proofServerUri =
     config.proverServerUri ||
     envProofServer ||
-    'https://proof-server.preview.midnight.network';
+    'https://proof-server.preprod.midnight.network';
   const rawShielded = (await connectedAPI.getShieldedAddresses().catch(() => ({}))) as any;
   const coinPublicKey =
     rawShielded?.coinPublicKey ||
@@ -154,3 +157,5 @@ export const initializeProviders = async (
     },
   };
 };
+
+

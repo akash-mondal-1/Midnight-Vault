@@ -19,6 +19,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       buffer: 'buffer',
     },
+    dedupe: ['@midnight-ntwrk/compact-runtime'],
   },
   server: {
     port: 3000,

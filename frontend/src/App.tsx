@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { MoonButton } from '@/components/ui/MoonButton';
@@ -7,579 +6,457 @@ import { CrescentDivider } from '@/components/ui/CrescentDivider';
 import { WalletConnectModal } from '@/components/ui/WalletConnectModal';
 import { useWallet } from '@/context/WalletContext';
 import { useContract } from '@/context/ContractContext';
-import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { getIssuerId, getUserId, getCredentialCommitment } from '@/lib/compiled-contract';
+import { toHex, fromHex } from '@/lib/midnight-providers';
+import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, RefreshCw, Key, ShieldCheck, XCircle } from 'lucide-react';
+
+const to32Bytes = (text: string): Uint8Array => {
+  const arr = new Uint8Array(32);
+  const encoder = new TextEncoder();
+  const encoded = encoder.encode(text);
+  arr.set(encoded.slice(0, 32));
+  return arr;
+};
 
 export default function Home() {
   const {
     isConnected,
     address,
-    connectWallet,
     disconnect,
-    isWalletAvailable,
     walletType,
     error: walletError,
   } = useWallet();
   const {
     contractAddress,
-    registeredMembersCount,
-    registerMember,
-    deployNewContract,
     isContractValid,
     isLoading,
-    privacyProven,
     txHash,
     error: contractError,
+    deployNewContract,
+    authorizeIssuer,
+    issueCredential,
+    verifyCredential,
+    revokeCredential,
     resetState,
   } = useContract();
 
-  const [secretInput, setSecretInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showSecret, setShowSecret] = useState(false);
-  const [secretSaved, setSecretSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<'issuer' | 'holder'>('issuer');
 
-  // Generate a random 6-digit numeric secret for the ZK witness
-  const generateSecret = useCallback(() => {
-    const random = Math.floor(100000 + Math.random() * 900000).toString();
-    setSecretInput(random);
-    setShowSecret(true);  // show it so user can copy/save it
-    setSecretSaved(false);
-  }, []);
+  // Issuer State
+  const [issuerSecret, setIssuerSecret] = useState('demo-secret-123');
+  const [recipientSecret, setRecipientSecret] = useState('my-cred-secret-abc');
+  const [issueTier, setIssueTier] = useState('1');
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!secretInput.trim()) return;
+  // Derived Public Issuer ID
+  const derivedIssuerIdBytes = getIssuerId(to32Bytes(issuerSecret));
+  const derivedIssuerIdHex = toHex(derivedIssuerIdBytes);
 
-    // Validate: only numeric input accepted for the Compact Field type
-    const numericOnly = secretInput.replace(/[^0-9]/g, '');
-    if (!numericOnly || numericOnly === '0') {
-      return;
-    }
+  // Derived Credential Commitment (D1 v6 formula: hash(userId, ctypeBytes, issuerId))
+  const derivedUserIdBytes = getUserId(to32Bytes(recipientSecret));
+  const derivedCommitmentBytes = getCredentialCommitment(derivedUserIdBytes, BigInt(issueTier), derivedIssuerIdBytes);
+  const derivedCommitmentHex = toHex(derivedCommitmentBytes);
 
-    const numericSecret = BigInt(numericOnly);
-    await registerMember(numericSecret);
-  };
+  // Holder State
+  const [credSecret, setCredSecret] = useState('my-cred-secret-abc');
+  const [credIssuer, setCredIssuer] = useState(derivedIssuerIdHex);
+  const [credTier, setCredTier] = useState('1');
+  
+  // Verify State
+  const [requiredTier, setRequiredTier] = useState('1');
+
+  // Revoke State
+  const [revokeCommitment, setRevokeCommitment] = useState('');
+
+  // Results
+  const [verifyResult, setVerifyResult] = useState<boolean | null>(null);
 
   const handleCopyAddress = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(contractAddress || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard not available
-    }
+    } catch {}
   }, [contractAddress]);
 
   const truncateAddress = (addr: string, start = 6, end = 4) =>
     `${addr.slice(0, start)}...${addr.slice(-end)}`;
 
+  const handleAuthorize = async () => {
+    try {
+      await authorizeIssuer(derivedIssuerIdBytes, { issuerSecret: to32Bytes(issuerSecret) });
+    } catch {}
+  };
+
+  const handleIssue = async () => {
+    try {
+      await issueCredential(derivedCommitmentBytes, {
+        issuerSecret: to32Bytes(issuerSecret),
+        credentialType: BigInt(issueTier)
+      });
+    } catch {}
+  };
+
+  const handleRevoke = async () => {
+    try {
+      const trimmed = revokeCommitment.trim();
+      const targetCommitmentBytes = trimmed.length === 64 ? fromHex(trimmed) : trimmed.length > 0 ? to32Bytes(trimmed) : derivedCommitmentBytes;
+      await revokeCredential(targetCommitmentBytes, {
+        issuerSecret: to32Bytes(issuerSecret)
+      });
+    } catch {}
+  };
+
+  const handleVerify = async () => {
+    setVerifyResult(null);
+    try {
+      const issuerTrimmed = credIssuer.trim();
+      const issuerBytes = issuerTrimmed.length === 64 ? fromHex(issuerTrimmed) : to32Bytes(issuerTrimmed);
+      await verifyCredential(BigInt(requiredTier), {
+        credentialSecret: to32Bytes(credSecret),
+        credentialIssuer: issuerBytes,
+        credentialType: BigInt(credTier)
+      });
+      // If we reach here without throwing, proof was generated and tx confirmed (or submitted)
+      setVerifyResult(true);
+    } catch (e) {
+      setVerifyResult(false);
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-start py-20 px-4">
-      {/* Wallet Connect Modal */}
       <WalletConnectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      {/* Navbar/Header */}
+      {/* Header */}
       <header className="w-full max-w-6xl flex justify-between items-center mb-24 relative z-20">
         <div className="flex items-center gap-3">
           <MoonIcon className="w-8 h-8 text-moon-white" />
           <span className="text-xl font-medium tracking-wide">Midnight Vault</span>
+          <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider bg-moon-glow/20 text-moon-glow border border-moon-glow/30">
+            PREPROD
+          </span>
         </div>
 
         <nav aria-label="Wallet navigation">
           {isConnected ? (
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-                <div className="w-2 h-2 rounded-full bg-green-400" aria-hidden="true" />
-                <span className="text-sm text-green-300 font-mono" aria-label="Connected wallet address">
+                <div className="w-2 h-2 rounded-full bg-green-400" />
+                <span className="text-sm text-green-300 font-mono">
+                  {walletType === 'Lace' ? 'Lace: ' : walletType === 'Nightly' ? 'Nightly: ' : 'Wallet: '}
                   {address ? truncateAddress(address) : 'Connected'}
                 </span>
               </div>
-              <MoonButton
-                variant="outline"
-                onClick={disconnect}
-                id="disconnect-btn"
-                className="px-4 py-2 text-xs"
-                aria-label="Disconnect wallet"
-              >
+              <MoonButton variant="outline" onClick={disconnect} className="px-4 py-2 text-xs">
                 Disconnect
               </MoonButton>
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              {walletError && (
-                <span className="text-xs text-red-400 max-w-[200px] truncate" role="alert">
-                  {walletError}
-                </span>
-              )}
-              <MoonButton
-                onClick={() => setIsModalOpen(true)}
-                id="header-connect-btn"
-                aria-label="Connect Wallet"
-              >
-                Connect Wallet
-              </MoonButton>
+              {walletError && <span className="text-xs text-red-400 max-w-[200px] truncate">{walletError}</span>}
+              <MoonButton onClick={() => setIsModalOpen(true)}>Connect Wallet</MoonButton>
             </div>
           )}
         </nav>
       </header>
 
       {/* Hero Section */}
-      <section
-        className="flex flex-col items-center justify-center text-center max-w-4xl w-full mb-32 relative z-10"
-        aria-labelledby="hero-heading"
-      >
+      <section className="flex flex-col items-center justify-center text-center max-w-4xl w-full mb-32 relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: 'easeOut' }}
           className="relative w-48 h-48 mb-12"
-          aria-hidden="true"
         >
-          {/* Animated Moon */}
           <div className="absolute inset-0 rounded-full bg-moon-white shadow-[0_0_80px_rgba(244,246,240,0.4)]">
             <div className="absolute top-[20%] left-[20%] w-8 h-8 rounded-full bg-silver/20" />
             <div className="absolute bottom-[30%] right-[30%] w-12 h-12 rounded-full bg-silver/20" />
-            <div className="absolute top-[40%] right-[20%] w-6 h-6 rounded-full bg-silver/20" />
           </div>
-
-          {/* Orbiting Stars */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            className="absolute -inset-10 border border-white/10 rounded-full"
-          >
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="absolute -inset-10 border border-white/10 rounded-full">
             <Sparkles className="absolute -top-3 left-1/2 text-moon-glow w-6 h-6 -translate-x-1/2" />
           </motion.div>
         </motion.div>
 
-        <motion.h1
-          id="hero-heading"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="text-5xl md:text-7xl font-light tracking-tight mb-6 text-moon-white text-balance"
-        >
-          Privacy Lives Here.
+        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.3 }} className="text-5xl md:text-7xl font-light tracking-tight mb-6 text-moon-white text-balance">
+          Private Credentials.
         </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-lg md:text-xl text-silver/80 font-light max-w-2xl text-balance mb-12"
-        >
-          A thin, deliberate crescent of your identity revealed. The rest rests in shadow,
-          protected by zero-knowledge proofs on the Midnight network.
+        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.5 }} className="text-lg md:text-xl text-silver/80 font-light max-w-2xl text-balance mb-12">
+          Prove your eligibility without revealing your identity or the credential itself. Powered by zero-knowledge proofs on Midnight Preprod.
         </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7 }}
-          className="flex flex-wrap gap-4 justify-center"
-        >
-          {!isConnected && (
-            <MoonButton
-              onClick={() => setIsModalOpen(true)}
-              id="hero-connect-btn"
-              aria-label="Enter the Vault by connecting wallet"
-            >
-              Enter the Vault
-            </MoonButton>
-          )}
-          <MoonButton
-            variant="secondary"
-            id="discover-btn"
-            onClick={() => {
-              document.getElementById('contract-section')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            aria-label="Scroll to learn how privacy works"
-          >
-            Discover How
-          </MoonButton>
-        </motion.div>
       </section>
 
       <CrescentDivider />
 
-      {/* Privacy Architecture Section */}
-      <section
-        id="privacy-section"
-        className="w-full max-w-5xl my-16 relative z-10"
-        aria-labelledby="privacy-heading"
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-12"
-        >
-          <h2 id="privacy-heading" className="text-3xl md:text-4xl font-light mb-4 text-moon-white">
-            Observable Privacy
-          </h2>
-          <p className="text-silver/70 max-w-2xl mx-auto">
-            The public chain sees a counter increment and a disclosure event. It never sees your secret.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              icon: '🔒',
-              title: 'Private Witness',
-              desc: 'Your membershipSecret is computed locally in the ZK circuit. It never leaves your device or browser.',
-            },
-            {
-              icon: '⚡',
-              title: 'ZK Proof',
-              desc: 'Midnight generates a mathematical proof that you know the secret — without revealing the secret itself.',
-            },
-            {
-              icon: '📡',
-              title: 'Public Disclosure',
-              desc: 'Only disclose(1) and the counter increment appear on-chain. Your secret stays hidden forever.',
-            },
-          ].map((item, i) => (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="p-6 rounded-[24px] bg-midnight-blue/30 border border-white/5 backdrop-blur-sm"
-            >
-              <div className="text-3xl mb-4" aria-hidden="true">{item.icon}</div>
-              <h3 className="text-moon-white font-medium mb-2">{item.title}</h3>
-              <p className="text-sm text-silver/60 leading-relaxed">{item.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <CrescentDivider />
-
-      {/* Contract Interaction Section */}
-      <section
-        id="contract-section"
-        className="w-full max-w-5xl my-24 grid md:grid-cols-2 gap-12 relative z-10"
-        aria-labelledby="contract-heading"
-      >
-        <div className="flex flex-col justify-center">
-          <h2
-            id="contract-heading"
-            className="text-3xl md:text-4xl font-light mb-6 flex items-center gap-3"
-          >
-            <Shield className="w-8 h-8 text-moon-glow" aria-hidden="true" />
-            Prove Without Revealing
-          </h2>
-          <p className="text-silver/80 font-light mb-8 text-lg">
-            Using Midnight Compact, you can register as a member by proving knowledge of the
-            membership secret. The secret is validated in a local zero-knowledge circuit.
-            Only a cryptographic proof is sent to the network.
-          </p>
-
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <div
-              className="border border-white/10 rounded-2xl p-6 bg-midnight-blue/30 backdrop-blur-sm"
-              aria-label="Global members count"
-            >
-              <h3 className="text-silver text-sm mb-2 uppercase tracking-widest">Global Members</h3>
-              <div className="text-4xl font-light text-moon-white" aria-live="polite">
-                {registeredMembersCount}
-              </div>
-            </div>
+      {/* Dashboard Section */}
+      <section className="w-full max-w-6xl my-16 relative z-10">
+        <div className="flex flex-col md:flex-row gap-8">
+          
+          {/* Left Column: Network & Contract Status */}
+          <div className="w-full md:w-1/3 flex flex-col gap-6">
             <div className="border border-white/10 rounded-2xl p-6 bg-midnight-blue/30 backdrop-blur-sm">
-              <h3 className="text-silver text-sm mb-2 uppercase tracking-widest">Network</h3>
-              <div className="text-lg font-light text-moon-white flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" aria-hidden="true" />
-                Preview
+              <h3 className="text-silver text-sm mb-2 uppercase tracking-widest font-light flex items-center gap-2">
+                <Shield className="w-4 h-4 text-moon-glow" />
+                Vault Contract (Preprod)
+              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <code className="text-sm text-moon-white/90 font-mono">
+                  {contractAddress ? truncateAddress(contractAddress, 10, 10) : 'Not Deployed'}
+                </code>
+                {contractAddress && (
+                  <div className="flex gap-2">
+                    <button onClick={handleCopyAddress} className="text-silver/60 hover:text-white p-1">
+                      {copied ? <CheckCircle className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                    <a href={`https://indexer.preprod.midnight.network/api/v4/graphql`} target="_blank" rel="noreferrer" className="text-silver/60 hover:text-white p-1">
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                )}
               </div>
+              <div className="flex items-center gap-2 text-xs">
+              <div className={`w-2 h-2 rounded-full ${isContractValid ? 'bg-green-400' : 'bg-red-400'}`} />
+              <span className={isContractValid ? 'text-green-300' : 'text-red-300'}>
+                {isContractValid ? 'Contract verified on Preprod Indexer' : 'Contract not found'}
+              </span>
             </div>
-          </div>
-
-          {/* Contract Address */}
-          <div className="border border-white/10 rounded-2xl p-4 bg-midnight-blue/20 backdrop-blur-sm">
-            <h3 className="text-silver text-sm mb-2 uppercase tracking-widest font-light">Contract Address</h3>
-            <div className="flex items-center gap-2">
-              <code className="text-xs text-moon-white/80 font-mono flex-1 truncate">
-                {contractAddress ? truncateAddress(contractAddress, 16, 8) : 'Not Deployed'}
-              </code>
-              {contractAddress && (
-                <button
-                  onClick={handleCopyAddress}
-                  id="copy-address-btn"
-                  className="text-silver/40 hover:text-moon-white transition-colors p-1"
-                  aria-label="Copy contract address"
-                  title="Copy contract address"
-                >
-                  {copied ? (
-                    <CheckCircle className="w-4 h-4 text-green-400" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </button>
-              )}
-              {contractAddress && (
-                <a
-                  href={`https://indexer.preview.midnight.network/api/v4/graphql`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  id="indexer-link"
-                  className="text-silver/40 hover:text-moon-white transition-colors p-1"
-                  aria-label="View on Midnight Preview Indexer"
-                  title="View on Indexer"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              )}
-            </div>
+            
             {isContractValid === false && (
-              <div className="mt-3 text-xs text-amber-300 flex flex-col gap-2">
-                <span>⚠️ Contract not active on Preview (Testnet).</span>
-                {isConnected ? (
-                  <button
-                    onClick={deployNewContract}
-                    id="deploy-contract-btn"
-                    className="self-start underline text-moon-glow font-medium hover:text-yellow-200 transition-colors"
-                  >
+              <div className="mt-2 text-xs text-amber-300 flex flex-col gap-2">
+                {isConnected && (
+                  <button onClick={deployNewContract} className="self-start underline text-moon-glow font-medium hover:text-yellow-200 transition-colors">
                     Deploy New Contract Instance
                   </button>
-                ) : (
-                  <span className="text-silver/40">Connect your wallet to deploy a fresh instance.</span>
                 )}
               </div>
             )}
           </div>
-        </div>
-
-        {/* Registration Card */}
-        <MoonCard aria-label="Vault registration form">
-          <div className="flex flex-col h-full">
-            <h3 className="text-2xl font-light mb-2 flex items-center gap-2">
-              <Lock className="w-5 h-5" aria-hidden="true" />
-              Vault Registration
-            </h3>
-            <p className="text-sm text-silver/60 mb-8">
-              Enter your private witness credential. It will never leave your browser.
-            </p>
 
             {/* Error Display */}
             {contractError && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-6 p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-red-200 text-sm"
-                role="alert"
-              >
-                {contractError}
-              </motion.div>
+              <div className="p-4 rounded-xl bg-red-900/20 border border-red-500/30 text-red-200 text-sm">
+                ⚠️ {contractError}
+              </div>
+            )}
+            
+            {/* Loading Display */}
+            {isLoading && (
+              <div className="p-4 rounded-xl bg-moon-glow/10 border border-moon-glow/30 text-moon-glow text-sm flex items-center gap-3">
+                <Orbit className="w-5 h-5 animate-spin" />
+                <div className="flex flex-col">
+                  <span className="font-medium">Transaction in progress...</span>
+                  <span className="text-xs opacity-70">Check your wallet for approval.</span>
+                </div>
+              </div>
             )}
 
-            {/* Not connected warning */}
-            {!isConnected && !privacyProven && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mb-6 p-4 rounded-xl bg-amber-900/10 border border-amber-500/20 text-amber-200/80 text-sm flex items-center gap-2"
-              >
-                <span>Connect a Midnight wallet to register.</span>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  id="inline-connect-btn"
-                  className="text-moon-glow hover:text-yellow-200 transition-colors underline underline-offset-2 whitespace-nowrap"
-                  aria-label="Open wallet connect modal"
-                >
-                  Connect now
-                </button>
-              </motion.div>
-            )}
-
-            {/* Success State */}
-            {privacyProven ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-8"
-              >
-                <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 mb-2">
-                  <Shield className="w-8 h-8" aria-hidden="true" />
+            {/* Success Notification */}
+            {txHash && !isLoading && (
+              <div className="p-4 rounded-xl bg-green-900/20 border border-green-500/30 text-green-200 text-sm flex items-center gap-3">
+                <CheckCircle className="w-5 h-5" />
+                <div className="flex flex-col">
+                  <span className="font-medium">Transaction Submitted</span>
+                  <code className="text-xs opacity-70">TX: {truncateAddress(txHash)}</code>
                 </div>
-                <h4 className="text-xl font-medium text-moon-white">Privacy Protected</h4>
-                <p className="text-sm text-silver/80 max-w-xs">
-                  Your registration circuit was successfully called. A ZK proof was generated
-                  locally. Your secret was never transmitted.
-                </p>
-                {txHash && (
-                  <code className="text-xs text-silver/50 font-mono">TX: {truncateAddress(txHash, 8, 6)}</code>
-                )}
-                <MoonButton
-                  variant="outline"
-                  onClick={() => {
-                    resetState();
-                    setSecretInput('');
-                  }}
-                  id="register-again-btn"
-                  className="mt-4 text-xs px-6 py-2"
-                >
-                  Register Again
-                </MoonButton>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleRegister} className="flex-1 flex flex-col" noValidate>
-                <div className="mb-6 flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <label htmlFor="secret-input" className="block text-sm text-silver">
-                      Membership Secret
-                    </label>
-                    <button
-                      type="button"
-                      onClick={generateSecret}
-                      id="generate-secret-btn"
-                      className="inline-flex items-center gap-1 text-xs text-moon-glow/70 hover:text-moon-glow transition-colors"
-                      title="Generate a random 6-digit secret"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      Generate
-                    </button>
-                  </div>
-
-                  {/* What is this? callout */}
-                  <div className="mb-3 p-3 rounded-lg bg-soft-indigo/10 border border-soft-indigo/20 text-xs text-silver/70 leading-relaxed">
-                    <strong className="text-moon-white/80">What is this?</strong>&nbsp;
-                    This is your private ZK membership PIN — any number you choose (e.g. <code className="text-moon-glow">42</code> or <code className="text-moon-glow">123456</code>).
-                    It acts as your proof credential. The number itself <strong className="text-moon-white/80">never leaves your browser</strong> — only a ZK proof is sent on-chain.
-                    Use the same number to prove membership again later.
-                  </div>
-
-                  {/* Input + eye toggle */}
-                  <div className="relative">
-                    <input
-                      id="secret-input"
-                      type={showSecret ? 'text' : 'password'}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={secretInput}
-                      onChange={e => {
-                        const val = e.target.value.replace(/[^0-9]/g, '');
-                        setSecretInput(val);
-                        setSecretSaved(false);
-                      }}
-                      placeholder="e.g. 42 or 123456"
-                      autoComplete="off"
-                      className="w-full bg-space-black/50 border border-white/10 rounded-xl px-4 py-3 pr-10 text-moon-white focus:outline-none focus:border-moon-glow/50 focus:ring-1 focus:ring-moon-glow/20 transition-colors placeholder:text-silver/30 font-mono tracking-widest"
-                      aria-describedby="secret-hint"
-                      required
-                      minLength={1}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowSecret(v => !v)}
-                      id="toggle-secret-visibility"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-silver/40 hover:text-silver/80 transition-colors"
-                      aria-label={showSecret ? 'Hide secret' : 'Show secret'}
-                    >
-                      {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-
-                  {/* Save reminder — shown when secret is visible and non-empty */}
-                  {showSecret && secretInput && !secretSaved && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-2 flex items-center justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/20"
-                    >
-                      <span className="text-xs text-amber-200/80">
-                        ⚠️ Save this number! You’ll need it to prove membership again.
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setSecretSaved(true)}
-                        id="confirm-saved-btn"
-                        className="ml-2 text-xs text-amber-300 hover:text-amber-100 whitespace-nowrap transition-colors"
-                      >
-                        Got it ✓
-                      </button>
-                    </motion.div>
-                  )}
-
-                  <p id="secret-hint" className="text-xs text-silver/40 mt-2">
-                    Processed as a private Compact <code>Field</code> witness — stays local, proven via ZK.
-                  </p>
-                </div>
-
-                <MoonButton
-                  type="submit"
-                  id="execute-circuit-btn"
-                  disabled={isLoading || !secretInput || !isConnected}
-                  className="w-full"
-                  aria-label={isLoading ? 'Generating ZK proof...' : 'Execute ZK circuit'}
-                >
-                  {isLoading ? (
-                    <>
-                      <Orbit className="w-4 h-4 animate-spin" aria-hidden="true" />
-                      Generating Proof...
-                    </>
-                  ) : (
-                    'Execute ZK Circuit'
-                  )}
-                </MoonButton>
-
-                {isLoading && (
-                  <div className="mt-3 p-3 rounded-xl bg-moon-glow/5 border border-moon-glow/20 text-center space-y-1">
-                    <p className="text-xs text-moon-glow font-medium flex items-center justify-center gap-1.5">
-                      <span className="inline-block w-2 h-2 rounded-full bg-moon-glow animate-ping" />
-                      Generating ZK proof via Midnight proof server...
-                    </p>
-                    <p className="text-[11px] text-silver/60">
-                      Proof creation takes 30–90 seconds. Your wallet popup will open to approve the transaction once proof is ready.
-                    </p>
-                  </div>
-                )}
-
-                {!isConnected && (
-                  <p className="text-xs text-silver/40 text-center mt-3">
-                    Wallet connection required to submit
-                  </p>
-                )}
-              </form>
+              </div>
             )}
           </div>
-        </MoonCard>
+
+          {/* Right Column: Interaction Panels */}
+          <div className="w-full md:w-2/3 flex flex-col gap-6">
+            
+            {/* Tabs */}
+            <div className="flex gap-4 border-b border-white/10 pb-4">
+              <button 
+                onClick={() => { setActiveTab('holder'); resetState(); setVerifyResult(null); }}
+                className={`text-lg font-light pb-2 border-b-2 transition-colors ${activeTab === 'holder' ? 'border-moon-glow text-moon-white' : 'border-transparent text-silver/50 hover:text-silver'}`}
+              >
+                Holder / Verifier
+              </button>
+              <button 
+                onClick={() => { setActiveTab('issuer'); resetState(); setVerifyResult(null); }}
+                className={`text-lg font-light pb-2 border-b-2 transition-colors ${activeTab === 'issuer' ? 'border-moon-glow text-moon-white' : 'border-transparent text-silver/50 hover:text-silver'}`}
+              >
+                Issuer (Demo)
+              </button>
+            </div>
+
+            {!isConnected ? (
+              <div className="p-8 text-center border border-white/5 rounded-2xl bg-midnight-blue/20">
+                <p className="text-silver/60 mb-4">Please connect your wallet to interact with the Preprod network.</p>
+                <MoonButton onClick={() => setIsModalOpen(true)}>Connect Wallet</MoonButton>
+              </div>
+            ) : (
+              <>
+                {/* HOLDER TAB */}
+                {activeTab === 'holder' && (
+                  <div className="flex flex-col gap-6">
+                    <div className="p-4 rounded-xl bg-soft-indigo/10 border border-soft-indigo/20 text-xs text-silver/70">
+                      <strong>Credential Vault:</strong> Store your private credential details here. These values remain local to your browser and form the Private Witness during ZK proving.
+                    </div>
+                    
+                    <MoonCard>
+                      <h4 className="font-medium text-moon-white mb-4 flex items-center gap-2"><Key className="w-4 h-4 text-moon-glow" /> Local Private State</h4>
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Credential Secret (Private)</label>
+                          <input type="text" value={credSecret} onChange={e => setCredSecret(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Credential Issuer ID</label>
+                          <input type="text" value={credIssuer} onChange={e => setCredIssuer(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Eligibility Tier (Type)</label>
+                          <select value={credTier} onChange={e => setCredTier(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white">
+                            <option value="1">Tier 1 (Basic)</option>
+                            <option value="2">Tier 2 (Premium)</option>
+                            <option value="3">Tier 3 (VIP)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </MoonCard>
+
+                    <MoonCard>
+                      <h4 className="font-medium text-moon-white mb-4 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-green-400" /> Prove Eligibility</h4>
+                      <p className="text-xs text-silver/60 mb-4">Prove to the network you hold a valid, unrevoked credential satisfying the required tier. Your identity and exact tier remain hidden.</p>
+                      
+                      <div className="flex gap-4 items-end">
+                        <div className="flex-1">
+                          <label className="block text-xs text-silver mb-1">Required Tier</label>
+                          <select value={requiredTier} onChange={e => setRequiredTier(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white">
+                            <option value="1">Tier 1+</option>
+                            <option value="2">Tier 2+</option>
+                            <option value="3">Tier 3+</option>
+                          </select>
+                        </div>
+                        <MoonButton onClick={handleVerify} disabled={isLoading || !isContractValid} className="px-6 py-2">
+                          Verify Credential
+                        </MoonButton>
+                      </div>
+
+                      {verifyResult === true && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl border border-green-500/30 bg-green-900/10">
+                          <h5 className="text-green-400 font-medium mb-3 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> PROVED</h5>
+                          <ul className="text-sm text-silver/80 space-y-1 ml-6 list-disc marker:text-green-400">
+                            <li>Credential is valid</li>
+                            <li>Issuer is authorized</li>
+                            <li>Credential is not revoked</li>
+                            <li>Required eligibility satisfied</li>
+                          </ul>
+                          
+                          <div className="mt-4 pt-4 border-t border-white/10">
+                            <h5 className="text-amber-200/80 font-medium mb-2 flex items-center gap-2"><Lock className="w-4 h-4" /> NOT REVEALED</h5>
+                            <ul className="text-sm text-silver/60 space-y-1 ml-6 list-disc marker:text-amber-200/80">
+                              <li>Credential secret</li>
+                              <li>Exact credential tier</li>
+                              <li>User identity</li>
+                            </ul>
+                          </div>
+                          <p className="text-[10px] text-silver/40 mt-4 italic">Note: Credential commitment is publicly visible; repeated presentations may be linkable in this MVP.</p>
+                        </motion.div>
+                      )}
+                      
+                      {verifyResult === false && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl border border-red-500/30 bg-red-900/10 flex items-center gap-3 text-red-300">
+                          <XCircle className="w-6 h-6" />
+                          <div>
+                            <p className="font-medium">Verification Failed</p>
+                            <p className="text-xs opacity-80">Credential revoked, invalid, or insufficient tier.</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </MoonCard>
+                  </div>
+                )}
+
+                {/* ISSUER TAB */}
+                {activeTab === 'issuer' && (
+                  <div className="flex flex-col gap-6">
+                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/80">
+                      <strong>Demo Issuer Registration:</strong> This section is open for the Level 4 MVP to allow testing of the full issuance and revocation lifecycle.
+                    </div>
+                    
+                    <MoonCard>
+                      <h4 className="font-medium text-moon-white mb-4">ISSUER SETUP</h4>
+                      <p className="text-xs text-silver/60 mb-4">
+                        This registers the issuer's public commitment on the Midnight Preprod ledger. The issuer secret never becomes a public circuit argument.
+                      </p>
+                      
+                      <div className="grid grid-cols-1 gap-4 mb-4">
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Issuer Secret (Private)</label>
+                          <input type="text" value={issuerSecret} onChange={e => setIssuerSecret(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Issuer ID (Derived Public Commitment)</label>
+                          <input type="text" value={derivedIssuerIdHex} readOnly className="w-full bg-space-black/20 border border-white/5 rounded-lg px-3 py-2 text-xs text-silver/60 font-mono cursor-not-allowed" />
+                        </div>
+                      </div>
+                      <MoonButton variant="outline" onClick={handleAuthorize} disabled={isLoading || !isContractValid} className="w-full">
+                        Authorize Issuer
+                      </MoonButton>
+                    </MoonCard>
+
+                    <MoonCard>
+                      <h4 className="font-medium text-moon-white mb-4">2. Issue Credential</h4>
+                      <p className="text-xs text-silver/60 mb-4">
+                        Computes the D1 v6 commitment <code className="text-moon-glow font-mono">hash(userId, ctypeBytes, issuerId)</code> and registers it on-chain under the active authorized issuer.
+                      </p>
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Recipient Subject Secret (Private)</label>
+                          <input type="text" value={recipientSecret} onChange={e => setRecipientSecret(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white font-mono" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-silver mb-1">Credential Tier</label>
+                          <select value={issueTier} onChange={e => setIssueTier(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white">
+                            <option value="1">Tier 1</option>
+                            <option value="2">Tier 2</option>
+                            <option value="3">Tier 3</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-xs text-silver mb-1">Derived Credential Commitment (Public Circuit Argument)</label>
+                        <input type="text" value={derivedCommitmentHex} readOnly className="w-full bg-space-black/20 border border-white/5 rounded-lg px-3 py-2 text-xs text-silver/60 font-mono cursor-not-allowed" />
+                      </div>
+                      <MoonButton variant="outline" onClick={handleIssue} disabled={isLoading || !isContractValid} className="w-full">
+                        Issue Credential
+                      </MoonButton>
+                    </MoonCard>
+                    
+                    <MoonCard>
+                      <h4 className="font-medium text-moon-white mb-4">3. Revoke Credential</h4>
+                      <div className="mb-4">
+                        <label className="block text-xs text-silver mb-1">Credential Commitment to Revoke (Leave blank for derived)</label>
+                        <input type="text" placeholder={derivedCommitmentHex} value={revokeCommitment} onChange={e => setRevokeCommitment(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-moon-white font-mono" />
+                      </div>
+                      <MoonButton variant="outline" onClick={handleRevoke} disabled={isLoading || !isContractValid} className="w-full border-red-500/50 text-red-300 hover:bg-red-500/10 hover:text-red-200">
+                        Revoke Credential
+                      </MoonButton>
+                    </MoonCard>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer
-        className="w-full max-w-6xl mt-32 border-t border-white/10 pt-12 pb-8 flex flex-col md:flex-row justify-between items-center text-sm text-silver/60 gap-4"
-        role="contentinfo"
-      >
+      <footer className="w-full max-w-6xl mt-32 border-t border-white/10 pt-12 pb-8 flex flex-col md:flex-row justify-between items-center text-sm text-silver/60 gap-4" role="contentinfo">
         <p>Built for the Midnight DApp Challenge — New Moon to Full.</p>
         <div className="flex items-center gap-6">
-          <a
-            href="https://faucet.preview.midnight.network/"
-            target="_blank"
-            rel="noopener noreferrer"
-            id="faucet-link"
-            className="flex items-center gap-1.5 text-moon-glow/70 hover:text-moon-glow transition-colors"
-            aria-label="Get testnet tNIGHT & DUST tokens from the Preview Faucet"
-            title="Top up tNIGHT & DUST from the Midnight Preview Faucet"
-          >
-            <FaucetIcon className="w-4 h-4" />
-            Preview Faucet
+          <a href="https://faucet.preprod.midnight.network/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-moon-glow/70 hover:text-moon-glow transition-colors">
+            Preprod Faucet
           </a>
-          <a
-            href="https://github.com/akash-mondal-1/Mid-night-Vault-"
-            target="_blank"
-            rel="noopener noreferrer"
-            id="github-link"
-            className="flex items-center gap-1.5 hover:text-moon-white transition-colors"
-            aria-label="View source code on GitHub"
-          >
-            <GitHubIcon className="w-4 h-4" />
-            GitHub
+          <a href="https://github.com/akash-mondal-1/Midnight-Vault" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-moon-white transition-colors">
+            <ExternalLink className="w-4 h-4" /> GitHub
           </a>
-          <span>Preview (Testnet)</span>
+          <span>MIDNIGHT PREPROD</span>
         </div>
       </footer>
     </main>
@@ -590,26 +467,6 @@ function MoonIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
       <path d="M12 2.15a1 1 0 00-1.46-.86A10.023 10.023 0 002 12c0 5.523 4.477 10 10 10 5.163 0 9.4-3.924 9.945-8.948a1 1 0 00-1.458-1.02A8.001 8.001 0 0112 4.135V2.15z" />
-    </svg>
-  );
-}
-
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-    </svg>
-  );
-}
-
-function FaucetIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-      <path d="M9 3h6l-1 5H10L9 3z" />
-      <path d="M12 8v4" />
-      <path d="M8 12h8" />
-      <path d="M10 12c0 2.5-2 4-2 6a4 4 0 008 0c0-2-2-3.5-2-6" />
-      <path d="M19 8h-2a2 2 0 00-2 2v1" />
     </svg>
   );
 }

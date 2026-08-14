@@ -13,7 +13,7 @@ import {
 } from '@/lib/midnight';
 import type { ConnectedAPI, InitialAPI } from '@midnight-ntwrk/dapp-connector-api';
 
-const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview';
+const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preprod';
 
 interface WalletContextType extends WalletState {
   isWalletAvailable: boolean;

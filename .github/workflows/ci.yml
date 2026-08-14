@@ -291,5 +291,31 @@ jobs:
           echo ""
           echo "  Artifact upload: compiled-vault-artifacts (see Actions > Artifacts)"
           echo ""
-          echo "  NEXT: Download artifact, place in contracts/managed/Vault/, then proceed to D3."
-          echo ""
+
+  build-and-test:
+    name: Build & Test (Node.js 20)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Root Dependencies
+        run: npm install
+
+      - name: Run Unit Tests
+        run: npm test
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build Frontend Application
+        working-directory: frontend
+        run: npm run build
+

