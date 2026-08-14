@@ -8,10 +8,10 @@
 
 > **Privacy-preserving zero-knowledge credential issuance, verification, and revocation platform built on Midnight Network.**
 
-- **Live Preprod Demo:** [https://mid-night-vault.vercel.app/](https://mid-night-vault.vercel.app/)
+- **Live Preprod Demo:** [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/) *(Live Midnight Vault Application on Preprod)*
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
-- **Product X (Twitter):** [@MidnightVault](https://x.com/MidnightVault)
-- **Demo Video:** [Watch Demonstration](https://drive.google.com/drive/folders/1KBfEGdjWiPhWVDirXjqjVIxw_SVBsn8L)
+- **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
+- **Demo Video:** `[PENDING / TO BE ADDED]`
 
 ---
 
@@ -279,10 +279,10 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 ## 10. Product X (Twitter) & Demo Video
 
 ### Product X Profile
-- **Handle:** [@MidnightVault](https://x.com/MidnightVault)
+- **Handle:** [@Mid_nightVault_](https://x.com/Mid_nightVault_)
 - **Profile Name:** Midnight Vault
 - **Bio:** Zero-Knowledge Credential Infrastructure on @MidnightNtwrk. Privacy-preserving issuance, threshold verification & revocation.
-- **Link:** [https://x.com/MidnightVault](https://x.com/MidnightVault)
+- **Link:** [https://x.com/Mid_nightVault_](https://x.com/Mid_nightVault_)
 
 ### Demo Video Script (2-4 Minutes)
 1. **0:00 - 0:30**: Introduction, problem of over-disclosure in Web3 ID, Midnight privacy model.
@@ -302,6 +302,24 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 
 ---
 
-## 12. License
+
+## 12. D4 Final Submission Checklist
+
+| Item | Status | Link / Details |
+| :--- | :---: | :--- |
+| **Public GitHub Repository** | ✅ PASS | [akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault) |
+| **Full Technical Documentation** | ✅ PASS | [README.md](./README.md) with ZK mathematics & architecture |
+| **Live Preprod Demo** | ✅ PASS | [midnight-vault-nine.vercel.app](https://midnight-vault-nine.vercel.app/) |
+| **Canonical Preprod Contract** | ✅ PASS | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
+| **CI/CD Workflow** | ✅ PASS | [.github/workflows/ci.yml](./.github/workflows/ci.yml) |
+| **Passing CI & Build Status** | ✅ PASS | Tests: 4/4 passed, Vite: 0 errors |
+| **15+ Meaningful Commits** | ✅ PASS | 87+ meaningful commits on `main` |
+| **Product X Profile** | ✅ PASS | [@Mid_nightVault_](https://x.com/Mid_nightVault_) |
+| **Demo Video** | ⏳ PENDING | *[PENDING / TO BE ADDED]* |
+
+---
+
+## 13. License
+
 
 This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
