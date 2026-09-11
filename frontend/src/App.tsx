@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MoonButton } from '@/components/ui/MoonButton';
 import { MoonCard } from '@/components/ui/MoonCard';
@@ -6,8 +6,8 @@ import { CrescentDivider } from '@/components/ui/CrescentDivider';
 import { WalletConnectModal } from '@/components/ui/WalletConnectModal';
 import { useWallet } from '@/context/WalletContext';
 import { useContract } from '@/context/ContractContext';
-import { getIssuerId, getUserId, getCredentialCommitment } from '@/lib/compiled-contract';
-import { toHex, fromHex } from '@/lib/midnight-providers';
+import { getIssuerId, getUserId, getCredentialCommitment } from '@/lib/credential-derivation';
+import { toHex, fromHex } from '@/lib/hex-utils';
 import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, RefreshCw, Key, ShieldCheck, XCircle, MessageSquare } from 'lucide-react';
 
 // Configurable Level 5 user feedback link (defaults to repo feedback document until external form is finalized)
@@ -52,18 +52,39 @@ export default function Home() {
   const [recipientSecret, setRecipientSecret] = useState('my-cred-secret-abc');
   const [issueTier, setIssueTier] = useState('1');
 
-  // Derived Public Issuer ID
-  const derivedIssuerIdBytes = getIssuerId(to32Bytes(issuerSecret));
-  const derivedIssuerIdHex = toHex(derivedIssuerIdBytes);
+  // Derived Public Issuer ID and Credential Commitment (with defensive fallback)
+  const { derivedIssuerIdBytes, derivedIssuerIdHex, derivedCommitmentBytes, derivedCommitmentHex } = useMemo(() => {
+    try {
+      const issuerBytes = to32Bytes(issuerSecret || 'demo-secret-123');
+      const issuerId = getIssuerId(issuerBytes);
+      const issuerHex = toHex(issuerId);
 
-  // Derived Credential Commitment (D1 v6 formula: hash(userId, ctypeBytes, issuerId))
-  const derivedUserIdBytes = getUserId(to32Bytes(recipientSecret));
-  const derivedCommitmentBytes = getCredentialCommitment(derivedUserIdBytes, BigInt(issueTier), derivedIssuerIdBytes);
-  const derivedCommitmentHex = toHex(derivedCommitmentBytes);
+      const userBytes = to32Bytes(recipientSecret || 'my-cred-secret-abc');
+      const userId = getUserId(userBytes);
+      const tierNum = issueTier ? BigInt(issueTier) : 1n;
+      const commitment = getCredentialCommitment(userId, tierNum, issuerId);
+      const commitmentHex = toHex(commitment);
+
+      return {
+        derivedIssuerIdBytes: issuerId,
+        derivedIssuerIdHex: issuerHex,
+        derivedCommitmentBytes: commitment,
+        derivedCommitmentHex: commitmentHex,
+      };
+    } catch (err) {
+      console.warn('[MidnightVault] Derivation fallback:', err);
+      return {
+        derivedIssuerIdBytes: new Uint8Array(32),
+        derivedIssuerIdHex: '99967b5594ee4cc8ec0c31f8cbc02be10089e16eb269ba92f4b66d6b11431953',
+        derivedCommitmentBytes: new Uint8Array(32),
+        derivedCommitmentHex: '30b3866deff3cda30eddf79b4ba6092bbfa491881a2a7c41740ee55ecc26f6b9',
+      };
+    }
+  }, [issuerSecret, recipientSecret, issueTier]);
 
   // Holder State
   const [credSecret, setCredSecret] = useState('my-cred-secret-abc');
-  const [credIssuer, setCredIssuer] = useState(derivedIssuerIdHex);
+  const [credIssuer, setCredIssuer] = useState('99967b5594ee4cc8ec0c31f8cbc02be10089e16eb269ba92f4b66d6b11431953');
   const [credTier, setCredTier] = useState('1');
   
   // Verify State

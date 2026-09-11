@@ -5,6 +5,7 @@ import { WalletProvider } from '@/context/WalletContext';
 import { ContractProvider } from '@/context/ContractContext';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { ExtensionErrorSuppressor } from '@/components/ui/ExtensionErrorSuppressor';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 /**
  * Client-side providers wrapper.
@@ -15,7 +16,7 @@ import { ExtensionErrorSuppressor } from '@/components/ui/ExtensionErrorSuppress
  */
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <ErrorBoundary>
       <ExtensionErrorSuppressor />
       <AnimatedBackground />
       <WalletProvider>
@@ -23,6 +24,6 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
           {children}
         </ContractProvider>
       </WalletProvider>
-    </>
+    </ErrorBoundary>
   );
 }

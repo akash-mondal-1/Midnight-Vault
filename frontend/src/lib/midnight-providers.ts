@@ -13,12 +13,7 @@ import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { MidnightProviders, UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { Transaction } from '@midnight-ntwrk/ledger-v7';
 
-// Utility for hex conversion
-export const toHex = (arr: Uint8Array): string => Buffer.from(arr).toString('hex');
-export const fromHex = (hex: string): Uint8Array => {
-  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-  return new Uint8Array(Buffer.from(clean, 'hex'));
-};
+export { toHex, fromHex } from './hex-utils';
 
 // Custom ZK Config Provider prioritizing binary artifacts (.prover, .verifier, .bzkir)
 class CustomZkConfigProvider extends FetchZkConfigProvider {
