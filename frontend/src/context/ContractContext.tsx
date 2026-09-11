@@ -109,7 +109,7 @@ function formatContractError(err: any): string {
     extracted.includes('rejected') ||
     extracted.includes('denied')
   ) {
-    return 'Transaction was rejected in your Lace wallet. Please try again and click Sign transaction.';
+    return 'Wallet transaction was rejected. Please try again and approve the signature prompt in your wallet.';
   }
   if (
     extracted.includes('was shutdown') ||

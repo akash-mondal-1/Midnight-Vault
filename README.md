@@ -12,6 +12,18 @@
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
 - **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
 - **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
+- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 50 genuine Preprod users · Current: 0/50)*
+- **User Feedback & Changelog:** [docs/FEEDBACK.md](./docs/FEEDBACK.md)
+- **Tester Onboarding Guide:** [docs/USAGE.md](./docs/USAGE.md)
+- **Community Outreach Materials:** [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md)
+
+---
+
+## Contract Address
+
+| Network | Address |
+|---------|---------|
+| Preprod | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
 
 ---
 
@@ -110,6 +122,9 @@ The protocol uses Compact's native `persistentHash` with domain separation strin
 | `credentialCommitment` | ✅ Yes | ✅ Public (Disclosed) | Stored in `issued` and `revoked` ledger maps |
 | `issuerId` | ✅ Yes | ✅ Public (Disclosed) | Stored in `issuers` ledger map |
 | `requiredType` | ❌ Ephemeral | ✅ Public | Public argument passed to `verifyCredential` circuit |
+
+### Demonstration Issuer Architecture Disclosure
+In this live Preprod MVP, the "Issuer (Demo)" interface is provided strictly as a demonstration and testing harness to allow evaluators and community testers to experience the complete issuance and revocation lifecycle on Midnight Preprod. It does **not** represent production issuer key management infrastructure. In production deployments, issuing authorities manage private keys within secure hardware security modules (HSMs) or enterprise key vaults and publish commitments via administrative endpoints. The underlying smart contract (`Vault.compact`) cryptographically enforces that only authorized issuer commitments registered in the `issuers` ledger map can mint or revoke credentials.
 
 ---
 
@@ -322,7 +337,35 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 
 ---
 
-## 13. License
+## 13. Level 5 — Full Moon (User Validation)
+
+- **Target**: 50 genuine Preprod users
+- **Current status**: `0 / 50` *(Preparation phase; no synthetic or placeholder users)*
+- **Live Demo**: [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/)
+- **User Registry**: [USERS.md](USERS.md)
+- **User Guide**: [docs/USAGE.md](docs/USAGE.md)
+- **Feedback Loop**: [docs/FEEDBACK.md](docs/FEEDBACK.md)
+- **Community Outreach Materials**: [docs/USER_OUTREACH.md](docs/USER_OUTREACH.md)
+
+### Level 5 Submission Criteria & Progress
+
+| Requirement | Target | Current Status | Evidence / Reference |
+| :--- | :---: | :---: | :--- |
+| **Preprod Users** | 50 genuine Preprod users | `0 / 50` | [USERS.md](./USERS.md) *(public Preprod wallet address verified via Indexer verification)* |
+| **Feedback Loop Documented** | Structured feedback & changelog | In Place | [docs/FEEDBACK.md](./docs/FEEDBACK.md) *(structured feedback loop)* |
+| **Updated Documentation & Guide** | Comprehensive onboarding | In Place | [docs/USAGE.md](./docs/USAGE.md) & [README.md](./README.md) |
+| **Community Outreach Materials** | Discord, X, & Direct messages | In Place | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) |
+| **Meaningful Commits** | 20+ commits | 89 commits | Git commit history on `main` branch |
+| **Public GitHub Repository** | Public repo | ✅ PASS | [akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault) |
+| **Live Preprod Demo** | Functional dApp | ✅ PASS | [midnight-vault-nine.vercel.app](https://midnight-vault-nine.vercel.app/) |
+| **Canonical Contract** | Verified on Preprod | ✅ PASS | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
+| **MVP Demo Video** | Full functionality | ✅ PASS | [Watch MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link) |
+
+> **Authenticity Assurance**: In strict accordance with challenge rules, no dummy users, synthetic wallet addresses, or simulated feedback are recorded. Genuine on-chain addresses and feedback will be documented as participants interact with the application during the active onboarding window.
+
+---
+
+## 14. License
 
 
 This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.

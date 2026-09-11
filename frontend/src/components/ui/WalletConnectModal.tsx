@@ -152,7 +152,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-moon-white">Connect Wallet</h2>
-                    <p className="text-xs text-silver/60">Midnight Network · Preview (Testnet)</p>
+                    <p className="text-xs text-silver/60">Midnight Network · Preprod</p>
                   </div>
                 </div>
                 <button
@@ -312,7 +312,7 @@ export const WalletConnectModal = ({ isOpen, onClose }: WalletConnectModalProps)
                       "Open Lace extension → click ⚙️ Settings",
                       "Settings → Experiments → Enable Midnight dApp connector",
                       "In Midnight Settings: select Remote proof server",
-                      "Set network to Preview (Testnet) in Lace",
+                      "Set network to Preprod in Lace",
                     ].map((step, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <div className="w-5 h-5 rounded-full bg-soft-indigo/30 border border-soft-indigo/50 flex items-center justify-center flex-shrink-0 text-[10px] text-moon-white font-medium">

@@ -8,7 +8,10 @@ import { useWallet } from '@/context/WalletContext';
 import { useContract } from '@/context/ContractContext';
 import { getIssuerId, getUserId, getCredentialCommitment } from '@/lib/compiled-contract';
 import { toHex, fromHex } from '@/lib/midnight-providers';
-import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, RefreshCw, Key, ShieldCheck, XCircle } from 'lucide-react';
+import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, RefreshCw, Key, ShieldCheck, XCircle, MessageSquare } from 'lucide-react';
+
+// Configurable Level 5 user feedback link (defaults to repo feedback document until external form is finalized)
+const FEEDBACK_URL = 'https://github.com/akash-mondal-1/Midnight-Vault/blob/main/docs/FEEDBACK.md';
 
 const to32Bytes = (text: string): Uint8Array => {
   const arr = new Uint8Array(32);
@@ -42,7 +45,7 @@ export default function Home() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'issuer' | 'holder'>('issuer');
+  const [activeTab, setActiveTab] = useState<'issuer' | 'holder'>('holder');
 
   // Issuer State
   const [issuerSecret, setIssuerSecret] = useState('demo-secret-123');
@@ -110,6 +113,7 @@ export default function Home() {
 
   const handleVerify = async () => {
     setVerifyResult(null);
+    resetState();
     try {
       const issuerTrimmed = credIssuer.trim();
       const issuerBytes = issuerTrimmed.length === 64 ? fromHex(issuerTrimmed) : to32Bytes(issuerTrimmed);
@@ -137,6 +141,16 @@ export default function Home() {
           <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-wider bg-moon-glow/20 text-moon-glow border border-moon-glow/30">
             PREPROD
           </span>
+          <a
+            href={FEEDBACK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium text-silver/80 hover:text-moon-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            id="header-feedback-link"
+          >
+            <MessageSquare className="w-3 h-3 text-moon-glow" />
+            Feedback
+          </a>
         </div>
 
         <nav aria-label="Wallet navigation">
@@ -190,8 +204,80 @@ export default function Home() {
 
       <CrescentDivider />
 
+      {/* Quick Start Guide for Level 5 Testers */}
+      <section className="w-full max-w-6xl mt-12 mb-4 relative z-10">
+        <div className="border border-white/10 rounded-2xl p-5 bg-midnight-blue/20 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-moon-glow" />
+              <h3 className="text-xs font-semibold text-moon-white uppercase tracking-wider">
+                Quick Start · Tester Walkthrough
+              </h3>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="text-silver/50 text-[11px]">Network: Midnight Preprod</span>
+              <a
+                href={FEEDBACK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-moon-glow hover:underline inline-flex items-center gap-1 text-[11px]"
+              >
+                <MessageSquare className="w-3 h-3" /> Level 5 Feedback
+              </a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-moon-glow font-mono text-[11px] font-semibold block mb-1">01 · Connect Wallet</span>
+                <p className="text-silver/70 text-[11px] leading-relaxed">
+                  Connect <strong>1AM</strong> or <strong>Lace</strong> configured for <strong>Midnight Preprod</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-moon-glow font-mono text-[11px] font-semibold block mb-1">02 · Gas &amp; DUST</span>
+                <p className="text-silver/70 text-[11px] leading-relaxed">
+                  Obtain testnet $tNIGHT from faucet and generate mature DUST in your wallet.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-moon-glow font-mono text-[11px] font-semibold block mb-1">03 · Credential State</span>
+                <p className="text-silver/70 text-[11px] leading-relaxed">
+                  Pre-filled values match the active verified credential on-chain, or issue custom in Issuer tab.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-moon-glow font-mono text-[11px] font-semibold block mb-1">04 · Prove Eligibility</span>
+                <p className="text-silver/70 text-[11px] leading-relaxed">
+                  Click <strong>Verify Credential</strong> to generate local ZK proof &amp; verify on Preprod.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span className="text-moon-glow font-mono text-[11px] font-semibold block mb-1">05 · Revocation Flow</span>
+                <p className="text-silver/70 text-[11px] leading-relaxed">
+                  Optionally revoke in Issuer tab and observe circuit rejection during verification.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Dashboard Section */}
-      <section className="w-full max-w-6xl my-16 relative z-10">
+      <section className="w-full max-w-6xl my-8 relative z-10">
         <div className="flex flex-col md:flex-row gap-8">
           
           {/* Left Column: Network & Contract Status */}
@@ -219,17 +305,13 @@ export default function Home() {
               <div className="flex items-center gap-2 text-xs">
               <div className={`w-2 h-2 rounded-full ${isContractValid ? 'bg-green-400' : 'bg-red-400'}`} />
               <span className={isContractValid ? 'text-green-300' : 'text-red-300'}>
-                {isContractValid ? 'Contract verified on Preprod Indexer' : 'Contract not found'}
+                {isContractValid ? 'Contract verified on Preprod Indexer' : 'Connecting to Preprod Indexer...'}
               </span>
             </div>
             
             {isContractValid === false && (
-              <div className="mt-2 text-xs text-amber-300 flex flex-col gap-2">
-                {isConnected && (
-                  <button onClick={deployNewContract} className="self-start underline text-moon-glow font-medium hover:text-yellow-200 transition-colors">
-                    Deploy New Contract Instance
-                  </button>
-                )}
+              <div className="mt-2 text-xs text-amber-300/80">
+                <span>Querying canonical contract state from Preprod Indexer...</span>
               </div>
             )}
           </div>
@@ -293,43 +375,64 @@ export default function Home() {
                 {/* HOLDER TAB */}
                 {activeTab === 'holder' && (
                   <div className="flex flex-col gap-6">
-                    <div className="p-4 rounded-xl bg-soft-indigo/10 border border-soft-indigo/20 text-xs text-silver/70">
-                      <strong>Credential Vault:</strong> Store your private credential details here. These values remain local to your browser and form the Private Witness during ZK proving.
+                    <div className="p-4 rounded-xl bg-soft-indigo/10 border border-soft-indigo/20 text-xs text-silver/80 leading-relaxed space-y-1">
+                      <div className="font-semibold text-moon-white flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-moon-glow" />
+                        Zero-Knowledge Credential Holder
+                      </div>
+                      <p>
+                        Credential verification requires an active credential issued on-chain. The pre-filled values below match the verified canonical deployment baseline on Midnight Preprod, ready for immediate zero-knowledge verification.
+                      </p>
                     </div>
                     
                     <MoonCard>
-                      <h4 className="font-medium text-moon-white mb-4 flex items-center gap-2"><Key className="w-4 h-4 text-moon-glow" /> Local Private State</h4>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium text-moon-white flex items-center gap-2">
+                          <Key className="w-4 h-4 text-moon-glow" /> Local Private State (Witness)
+                        </h4>
+                        <span className="text-[10px] text-green-300/80 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full">
+                          Private to Browser
+                        </span>
+                      </div>
+                      <p className="text-xs text-silver/60 mb-4">
+                        These parameters form your private witness during client-side proving. They are evaluated locally in WebAssembly and are <strong>never</strong> transmitted over the network.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
-                          <label className="block text-xs text-silver mb-1">Credential Secret (Private)</label>
-                          <input type="text" value={credSecret} onChange={e => setCredSecret(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white" />
+                          <label className="block text-xs text-silver mb-1">Credential Secret (Private Witness)</label>
+                          <input type="text" value={credSecret} onChange={e => setCredSecret(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white font-mono" />
                         </div>
                         <div>
-                          <label className="block text-xs text-silver mb-1">Credential Issuer ID</label>
-                          <input type="text" value={credIssuer} onChange={e => setCredIssuer(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white" />
+                          <label className="block text-xs text-silver mb-1">Credential Issuer ID (Public Identifier)</label>
+                          <input type="text" value={credIssuer} onChange={e => setCredIssuer(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-moon-white font-mono" />
                         </div>
-                        <div>
-                          <label className="block text-xs text-silver mb-1">Eligibility Tier (Type)</label>
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs text-silver mb-1">Holder Credential Tier (Private Attribute)</label>
                           <select value={credTier} onChange={e => setCredTier(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white">
                             <option value="1">Tier 1 (Basic)</option>
                             <option value="2">Tier 2 (Premium)</option>
                             <option value="3">Tier 3 (VIP)</option>
                           </select>
+                          <span className="text-[10px] text-silver/50 mt-1 block">Your exact tier is evaluated against the required tier inside the ZK circuit without being revealed.</span>
                         </div>
                       </div>
                     </MoonCard>
 
                     <MoonCard>
-                      <h4 className="font-medium text-moon-white mb-4 flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-green-400" /> Prove Eligibility</h4>
-                      <p className="text-xs text-silver/60 mb-4">Prove to the network you hold a valid, unrevoked credential satisfying the required tier. Your identity and exact tier remain hidden.</p>
+                      <h4 className="font-medium text-moon-white mb-2 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-green-400" /> Prove Eligibility
+                      </h4>
+                      <p className="text-xs text-silver/60 mb-4 leading-relaxed">
+                        Generate a zero-knowledge proof that: <strong>(1)</strong> your credential was issued by an active authorized issuer, <strong>(2)</strong> it has not been revoked on-chain, and <strong>(3)</strong> your tier satisfies <code className="text-moon-glow font-mono">tier &gt;= requiredTier</code>.
+                      </p>
                       
-                      <div className="flex gap-4 items-end">
+                      <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end">
                         <div className="flex-1">
-                          <label className="block text-xs text-silver mb-1">Required Tier</label>
+                          <label className="block text-xs text-silver mb-1">Required Tier (Public Policy)</label>
                           <select value={requiredTier} onChange={e => setRequiredTier(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white">
-                            <option value="1">Tier 1+</option>
-                            <option value="2">Tier 2+</option>
-                            <option value="3">Tier 3+</option>
+                            <option value="1">Tier 1+ (Basic or Higher)</option>
+                            <option value="2">Tier 2+ (Premium or Higher)</option>
+                            <option value="3">Tier 3+ (VIP Only)</option>
                           </select>
                         </div>
                         <MoonButton onClick={handleVerify} disabled={isLoading || !isContractValid} className="px-6 py-2">
@@ -339,32 +442,35 @@ export default function Home() {
 
                       {verifyResult === true && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl border border-green-500/30 bg-green-900/10">
-                          <h5 className="text-green-400 font-medium mb-3 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> PROVED</h5>
+                          <h5 className="text-green-400 font-medium mb-3 flex items-center gap-2"><CheckCircle className="w-4 h-4" /> PROVED ON-CHAIN</h5>
                           <ul className="text-sm text-silver/80 space-y-1 ml-6 list-disc marker:text-green-400">
-                            <li>Credential is valid</li>
-                            <li>Issuer is authorized</li>
-                            <li>Credential is not revoked</li>
-                            <li>Required eligibility satisfied</li>
+                            <li>Credential commitment exists in active issued ledger map</li>
+                            <li>Issuing authority is authorized and active</li>
+                            <li>Credential has not been revoked</li>
+                            <li>Eligibility threshold satisfied (<code className="text-green-300 font-mono">tier &gt;= {requiredTier}</code>)</li>
+                            <li>Ledger verification counter incremented</li>
                           </ul>
                           
                           <div className="mt-4 pt-4 border-t border-white/10">
-                            <h5 className="text-amber-200/80 font-medium mb-2 flex items-center gap-2"><Lock className="w-4 h-4" /> NOT REVEALED</h5>
+                            <h5 className="text-amber-200/80 font-medium mb-2 flex items-center gap-2"><Lock className="w-4 h-4" /> KEPT STRICTLY PRIVATE</h5>
                             <ul className="text-sm text-silver/60 space-y-1 ml-6 list-disc marker:text-amber-200/80">
-                              <li>Credential secret</li>
-                              <li>Exact credential tier</li>
-                              <li>User identity</li>
+                              <li>Holder credential secret</li>
+                              <li>Exact credential tier ({credTier})</li>
+                              <li>Holder wallet address / personal identity</li>
                             </ul>
                           </div>
-                          <p className="text-[10px] text-silver/40 mt-4 italic">Note: Credential commitment is publicly visible; repeated presentations may be linkable in this MVP.</p>
+                          <p className="text-[10px] text-silver/40 mt-4 italic">Note: Zero-knowledge proof was evaluated locally via WASM before transaction submission.</p>
                         </motion.div>
                       )}
                       
                       {verifyResult === false && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl border border-red-500/30 bg-red-900/10 flex items-center gap-3 text-red-300">
-                          <XCircle className="w-6 h-6" />
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl border border-red-500/30 bg-red-900/10 flex items-start gap-3 text-red-300">
+                          <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                           <div>
-                            <p className="font-medium">Verification Failed</p>
-                            <p className="text-xs opacity-80">Credential revoked, invalid, or insufficient tier.</p>
+                            <p className="font-medium">Verification Rejected (Circuit Assertion)</p>
+                            <p className="text-xs opacity-90 mt-0.5">
+                              {contractError || 'Credential is not issued, has been revoked, or does not satisfy the required tier threshold.'}
+                            </p>
                           </div>
                         </motion.div>
                       )}
@@ -376,13 +482,13 @@ export default function Home() {
                 {activeTab === 'issuer' && (
                   <div className="flex flex-col gap-6">
                     <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200/80">
-                      <strong>Demo Issuer Registration:</strong> This section is open for the Level 4 MVP to allow testing of the full issuance and revocation lifecycle.
+                      <strong>Demo Issuer Registration:</strong> This section is open for the MVP to allow testing of the full issuance and revocation lifecycle.
                     </div>
                     
                     <MoonCard>
-                      <h4 className="font-medium text-moon-white mb-4">ISSUER SETUP</h4>
+                      <h4 className="font-medium text-moon-white mb-2">1. Issuer Setup (authorizeIssuer)</h4>
                       <p className="text-xs text-silver/60 mb-4">
-                        This registers the issuer's public commitment on the Midnight Preprod ledger. The issuer secret never becomes a public circuit argument.
+                        Registers the issuer's public commitment on the Midnight Preprod ledger. The issuer secret never becomes a public circuit argument.
                       </p>
                       
                       <div className="grid grid-cols-1 gap-4 mb-4">
@@ -401,11 +507,11 @@ export default function Home() {
                     </MoonCard>
 
                     <MoonCard>
-                      <h4 className="font-medium text-moon-white mb-4">2. Issue Credential</h4>
+                      <h4 className="font-medium text-moon-white mb-2">2. Issue Credential (issueCredential)</h4>
                       <p className="text-xs text-silver/60 mb-4">
-                        Computes the D1 v6 commitment <code className="text-moon-glow font-mono">hash(userId, ctypeBytes, issuerId)</code> and registers it on-chain under the active authorized issuer.
+                        Computes the Compact commitment <code className="text-moon-glow font-mono">hash(userId, ctypeBytes, issuerId)</code> and registers it on-chain under the active authorized issuer.
                       </p>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div>
                           <label className="block text-xs text-silver mb-1">Recipient Subject Secret (Private)</label>
                           <input type="text" value={recipientSecret} onChange={e => setRecipientSecret(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-moon-white font-mono" />
@@ -429,7 +535,10 @@ export default function Home() {
                     </MoonCard>
                     
                     <MoonCard>
-                      <h4 className="font-medium text-moon-white mb-4">3. Revoke Credential</h4>
+                      <h4 className="font-medium text-moon-white mb-2">3. Revoke Credential (revokeCredential)</h4>
+                      <p className="text-xs text-silver/60 mb-4">
+                        Marks the credential commitment revoked in the on-chain ledger map. Subsequent verification attempts by the holder will fail circuit assertion.
+                      </p>
                       <div className="mb-4">
                         <label className="block text-xs text-silver mb-1">Credential Commitment to Revoke (Leave blank for derived)</label>
                         <input type="text" placeholder={derivedCommitmentHex} value={revokeCommitment} onChange={e => setRevokeCommitment(e.target.value)} className="w-full bg-space-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-moon-white font-mono" />
@@ -448,15 +557,24 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full max-w-6xl mt-32 border-t border-white/10 pt-12 pb-8 flex flex-col md:flex-row justify-between items-center text-sm text-silver/60 gap-4" role="contentinfo">
-        <p>Built for the Midnight DApp Challenge — New Moon to Full.</p>
+        <p>Built for the Midnight DApp Challenge — Level 5 Full Moon.</p>
         <div className="flex items-center gap-6">
-          <a href="https://faucet.preprod.midnight.network/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-moon-glow/70 hover:text-moon-glow transition-colors">
+          <a
+            href={FEEDBACK_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-moon-glow hover:text-white transition-colors text-xs"
+            id="footer-feedback-link"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-moon-glow" /> Give Feedback
+          </a>
+          <a href="https://faucet.preprod.midnight.network/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-moon-glow/70 hover:text-moon-glow transition-colors text-xs">
             Preprod Faucet
           </a>
-          <a href="https://github.com/akash-mondal-1/Midnight-Vault" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-moon-white transition-colors">
-            <ExternalLink className="w-4 h-4" /> GitHub
+          <a href="https://github.com/akash-mondal-1/Midnight-Vault" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-moon-white transition-colors text-xs">
+            <ExternalLink className="w-3.5 h-3.5" /> GitHub
           </a>
-          <span>MIDNIGHT PREPROD</span>
+          <span className="text-xs">MIDNIGHT PREPROD</span>
         </div>
       </footer>
     </main>

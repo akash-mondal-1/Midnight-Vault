@@ -13,8 +13,8 @@ export type WalletState = {
 
 export type WalletType = 'lace' | '1am';
 
-// Network ID — Lace officially supports 'preview' (not preprod)
-const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preview';
+// Network ID — Preprod network
+const NETWORK_ID = (import.meta as any).env?.VITE_NETWORK_ID ?? 'preprod';
 
 // ── Wallet Detection ────────────────────────────────────────────────────
 
@@ -109,7 +109,7 @@ const connectConnector = async (
       throw new Error(`Connection rejected. Please approve in ${walletName}.`);
     }
     if (err?.message?.includes('network') || err?.message?.includes('mismatch')) {
-      throw new Error(`Network mismatch. Switch ${walletName} to Midnight Preview (testnet).`);
+      throw new Error(`Network mismatch. Switch ${walletName} to Midnight Preprod.`);
     }
     throw new Error(err?.message || `Failed to connect ${walletName}`);
   }
