@@ -1,7 +1,7 @@
 # Preprod Users — Level 5 — Full Moon
 
 Target: 50 genuine Preprod users  
-Current count: 5 / 50 (In Progress)
+Current count: 10 / 50 (In Progress)
 
 ---
 
@@ -18,8 +18,13 @@ The following table records verified participants who have connected to Midnight
 | 3 | `mn_addr_preprod1lra65vdu6e33as06trls8s3f9rlagv6rtqp286k7ckqh26smmwusg4sm8q` | Full Lifecycle (Authorize, Issue, Verify, Revoke) | Verified (Indexer / Contract state) | 2026-09-14 | Lace Wallet; completed full transaction lifecycle |
 | 4 | `mn_addr_preprod1y0005v64n2ppn4whrcsm4ejualmx0hd80tn2hlhx4h2qfpspd68s608y47` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-15 | Lace Wallet; successfully proved eligibility |
 | 5 | `mn_addr_preprod1fcs95y0mnzq3sjuyzqmw79nr625x6eeffvkppr4hqnhjsx2hx2gsnr4xh2` | Wallet Connection & DUST Balance Allocation | Verified (Indexer / Preprod balance) | 2026-09-15 | 1AM Wallet; DUST generation & connection verified |
+| 6 | `mn_addr_preprod15qupu9fu6df0sv8kwhege70npg48zc9y7p8g6en72cdnek3vemxs8p425q` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-15 | Lace Wallet; positive ZK proof verified on-chain |
+| 7 | `mn_addr_preprod14mkwgjjcwcspeh96kydg9yep9c6rn5rfu8tv6d5aq49kdtjk55zqn6ewex` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-15 | 1AM Wallet; client-side assertion halted tx |
+| 8 | `mn_addr_preprod1dgwrpckvhkf58j09uejrmkmcjad4w0duv3234tw9a4s22l0lyawseq5h3z` | Negative Assertion Flow (Revoked credential check) | Verified (Indexer / Assertion check) | 2026-09-15 | Lace Wallet; negative path verified |
+| 9 | `mn_addr_preprod14mdfw8xh8p0afs59j6lahzp9jzvlhdv7df2lrauw4x7rq7c20kvss2tqrw` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-15 | 1AM Wallet; proved threshold without identity reveal |
+| 10 | `mn_addr_preprod17d3nrqyyzz4eycuw7pvk7swkr4mvg7eyz02yjczmrmzztcs9v38s86hqxm` | Wallet Connection & DUST Generation | Verified (Indexer / Preprod balance) | 2026-09-15 | Lace Wallet; successful dApp connector handshake |
 
-*(Remaining 45 slots actively onboarding via community outreach and Google Form/Sheet feedback)*
+*(Remaining 40 slots actively onboarding via community outreach and Google Form/Sheet feedback)*
 
 ---
 
