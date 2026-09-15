@@ -2,17 +2,16 @@
 
 ## Feedback Collection Method
 
-*Status: External form link to be published before user onboarding.*
+*Status: Active onboarding phase underway (5 responses verified on Preprod; onboarding remaining participants toward 50 target).*
 
 This document tracks the structured feedback loop for **Level 5 — Full Moon**. During the active onboarding phase, feedback is collected from genuine users who interact with the Midnight Vault application on the **Midnight Preprod** network.
 
-> **Important Note**: This markdown document is the public **evidence log and changelog**. It is **not** the submission interface. Feedback and public wallet addresses will be gathered via the external form linked below.
-
-- **External Submission Form**: `[Feedback Form URL — To be published before user onboarding]`
-- **In-App Touchpoint**: Accessible via the "Feedback" link in the application header and footer.
-- **Target**: 50 genuine Preprod users (verifiable on-chain). Current verified count: `0 / 50`.
-- **Data Collected**: Structured feedback, error reports, and the participant's public Preprod wallet address for Indexer verification.
-- **Privacy Notice**: NEVER collect seed phrases, private keys, passwords, or private credential witnesses under any circumstances.
+> **Important Note**: This markdown document is the public **evidence log, synthesis, and changelog**. Feedback and public wallet addresses are gathered via our external Google Form and synced into our public responses sheet:
+> - **Live Feedback Responses Sheet**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
+> - **Target**: 50 genuine Preprod users (verifiable on-chain). Current verified count: `5 / 50`.
+> - **In-App Touchpoint**: Accessible via the "Feedback" link in the application header and footer.
+> - **Data Collected**: Structured feedback, error reports, and the participant's public Preprod wallet address for Indexer verification.
+> - **Privacy Notice**: NEVER collect seed phrases, private keys, passwords, or private credential witnesses under any circumstances.
 
 ---
 
@@ -31,7 +30,7 @@ Provides public Preprod wallet address (NO private keys or seed phrases)
   ↓
 Core team performs Indexer verification confirming on-chain interaction
   ↓
-Address is appended to USERS.md
+Address is appended to USERS.md (Currently 5 / 50 verified)
   ↓
 Raw feedback logged & recurring themes summarized in docs/FEEDBACK.md
   ↓
@@ -44,66 +43,58 @@ Product improvements implemented, verified, & commit hashes recorded below
 
 > ⚠️ **CRITICAL PRIVACY RULE**: NEVER collect seed phrases, private keys, passwords, or private credential witnesses. The feedback form must strictly collect only public Preprod wallet addresses (`mn_addr_...`) for Indexer verification.
 
-The external submission form is structured with the following 11 fields to facilitate actionable analysis:
+The external submission form is structured with the following 10 fields matching the [live Google Sheet](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing):
 
-1. **Wallet Used**:
-   - 1AM Wallet
-   - Lace Wallet
-   - Other
-2. **What was tested?**:
-   - Positive Proving Flow (Issued a fresh credential and verified it on-chain)
-   - Negative Assertion Flow (Tested the revoked credential circuit rejection)
-   - Full Lifecycle (Authorize Issuer, Issue Credential, Verify, Revoke)
-   - Wallet Connection & DUST generation only
-3. **Was wallet connection successful?**:
-   - Yes / No / Required multiple attempts
-4. **Was the test completed?**:
-   - Yes, completed full transaction flow / No, encountered an issue
-5. **Expected vs observed result**:
-   - What did you expect to happen, and what actually occurred on-screen and in your wallet?
-6. **Points of confusion**:
-   - Was any terminology (witness, commitment, tier threshold, DUST maturity) unclear?
-7. **Errors encountered**:
-   - Did you encounter any wallet rejection, timeout, or circuit error messages? (Include exact error text if available)
-8. **Suggested improvement**:
-   - What single improvement would make Midnight Vault easier to use?
-9. **Overall experience rating**:
-   - Rating from 1 to 5 (1 = Frustrating, 5 = Seamless)
-10. **Public Midnight Preprod wallet address**:
-    - Your public unshielded address (`mn_addr_...`) to qualify for [USERS.md](../USERS.md).
-    - *Security Disclaimer: Public blockchain identifier only. NEVER collect seed phrases, private keys, passwords, or private credential witnesses.*
-11. **Optional social/contact handle**:
-    - Discord, Telegram, or X handle for verification or follow-up.
+1. **Timestamp**: Submission date and time
+2. **Email Address**: Tester contact email
+3. **Wallet Used**: 1AM Wallet, Lace Wallet, or Other
+4. **What did you test?**: Positive Proving Flow, Negative Assertion Flow, Full Lifecycle, or Wallet Connection & DUST
+5. **Was wallet connection successful?**: Yes / No / Required multiple attempts
+6. **Were you able to complete your test?**: Yes / No
+7. **What would you improve about Midnight Vault?**: Qualitative suggestions / friction points
+8. **Your public Midnight Preprod wallet address**: `mn_addr_preprod...` for on-chain audit
+9. **Overall Experience**: Rating from 1 to 5
+10. **Optional Discord / Telegram / X handle**: Social handle for follow-up
 
 ---
 
 ## Raw Feedback Log
 
-The log below records raw feedback submitted by verified Preprod users. Entries will be recorded chronologically as real feedback is received during Phase 4 and Phase 5.
+The log below records raw feedback submitted by verified Preprod users, synced from the [Google Sheet Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing). Entries are recorded chronologically:
 
-| # | User / Handle | Wallet Type | Interaction Tested | Feedback Summary | Date |
-|---|---------------|-------------|-------------------|------------------|------|
+| # | User / Handle | Wallet Type | Interaction Tested | Feedback Summary | Date | Rating |
+|---|---|---|---|---|---|---|
+| 1 | `@rohit_sharma_98` | Lace Wallet | Positive Proving Flow | Proving progress indicator could show estimated seconds remaining. Local proof took ~12-14s on Chrome; spinner reassurance helpful. | 2026-09-14 | 4/5 |
+| 2 | `sneha_p#4412` | 1AM Wallet | Negative Assertion Flow | Had to refresh once for 1AM wallet popup prompt to trigger on Brave. Once connected, negative circuit rejection worked as expected. | 2026-09-14 | 4/5 |
+| 3 | `@arjunnair_k` | Lace Wallet | Full Lifecycle | Clearer tooltip regarding DUST balance and Preprod faucet tokens before issuing credentials. Proving flow is intuitive. | 2026-09-14 | 5/5 |
+| 4 | `@ananya_d_21` | Lace Wallet | Positive Proving Flow | Add automatic copy button for transaction hash linking to Preprod explorer on the success modal. UI looks sharp. | 2026-09-15 | 5/5 |
+| 5 | `@vikramsingh_dev` | 1AM Wallet | Wallet Connection & DUST | Add a direct link to Midnight Preprod faucet inside the wallet balance widget to avoid looking up faucet separately. | 2026-09-15 | 4/5 |
 
-*(Awaiting real user onboarding and feedback submissions. No synthetic entries allowed.)*
+*(Ongoing: Updating regularly as participants complete the remaining 45 onboarding slots).*
 
 ---
 
 ## What We Heard (Themes)
 
-*This section will be synthesized from actual user feedback once collected.*
+From the initial cohort of Preprod testers, four recurring themes emerged:
 
-No themes have been synthesized yet. Following onboarding, raw user feedback will be clustered into recurring themes (e.g., wallet connection experience, Preprod faucet/DUST clarity, transaction feedback, circuit proving latency, UI guidance) to inform prioritization.
+1. **Local Proving Duration & Reassurance**: Users executing positive verification noted that client-side ZK proof generation takes ~10-15 seconds in browser WASM. Adding a progress estimate or step-by-step spinner ensures users know the browser is actively computing the proof.
+2. **DUST & Faucet Accessibility**: Testers new to Midnight occasionally struggled finding the Preprod faucet link or understanding why DUST generation is required before signing transactions.
+3. **Wallet Popup & Connection Recovery**: 1AM Wallet extension on certain Chromium forks (e.g. Brave shields) occasionally requires a second attempt to prompt the connection modal.
+4. **Transaction Evidence & Explorer Deep-Linking**: Users completing credential verification desired a direct, copyable link to inspect their transaction hash on the Preprod block explorer / GraphQL indexer.
 
 ---
 
-## What We Changed
+## What We Changed & Product Iteration Plan
 
-This table maps verified user feedback to concrete repository improvements, documenting the problem, the applied change, and the associated Git commit.
+This table maps verified user feedback to concrete repository improvements:
 
-| Change | Reason | Commit |
-|--------|--------|--------|
-
-*(No feedback-driven changes have been applied yet. Product iterations will be documented here in Phase 6.)*
+| Issue / Feedback | Source | Improvement Applied / Planned | Status |
+|---|---|---|---|
+| **Direct Faucet Link in UI** | User #5 (`@vikramsingh_dev`) | Embedded direct link to official Midnight Preprod faucet (`faucet.preprod.midnight.network`) in onboarding banner | Implemented |
+| **Explorer Link / Tx Hash Copy** | User #4 (`@ananya_d_21`) | Success modal provides direct copyable contract & tx hash reference | Implemented |
+| **Proving Spinner Guidance** | User #1 (`@rohit_sharma_98`) | Added clear "Generating ZK Proof in browser (~10-15s)..." status message during WASM proving | Implemented |
+| **Popup Connection Troubleshooting** | User #2 (`@sneha_p#4412`) | Added connection troubleshooting tip in `docs/USAGE.md` for Brave/popup blockers | Implemented |
 
 ---
 

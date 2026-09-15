@@ -123,8 +123,10 @@ In this live Preprod MVP, the "Issuer (Demo)" interface is provided strictly as 
 To be credited as one of our 50 verified Preprod users:
 1. Open your 1AM or Lace wallet.
 2. Copy your public unshielded address (starts with `mn_addr_...`).
-3. Submit your address via the designated Level 5 feedback form *(external URL to be published prior to onboarding)*.
+3. Submit your address via the designated Level 5 feedback form / [Responses Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing).
 4. Your interaction will be audited against the Preprod GraphQL indexer and added to [USERS.md](../USERS.md).
+
+> **Troubleshooting Note (Brave & Popup Blockers)**: If your wallet connection popup does not appear immediately when clicking "Connect Wallet", ensure popup blockers or Brave Shields allow wallet prompts, or reload the page once.
 
 ---
 

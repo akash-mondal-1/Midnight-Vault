@@ -12,8 +12,9 @@
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
 - **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
 - **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
-- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 50 genuine Preprod users · Current: 0/50)*
+- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 50 genuine Preprod users · Current: 5/50 In Progress)*
 - **User Feedback & Changelog:** [docs/FEEDBACK.md](./docs/FEEDBACK.md)
+- **Live Feedback Responses:** [Google Sheets Responses Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
 - **Tester Onboarding Guide:** [docs/USAGE.md](./docs/USAGE.md)
 - **Community Outreach Materials:** [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md)
 
@@ -340,8 +341,9 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 ## 13. Level 5 — Full Moon (User Validation)
 
 - **Target**: 50 genuine Preprod users
-- **Current status**: `0 / 50` *(Preparation phase; no synthetic or placeholder users)*
+- **Current status**: `5 / 50` *(Active Onboarding Phase · 5 on-chain verified participants, remaining 45 in progress)*
 - **Live Demo**: [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/)
+- **Live Feedback Responses**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
 - **User Registry**: [USERS.md](USERS.md)
 - **User Guide**: [docs/USAGE.md](docs/USAGE.md)
 - **Feedback Loop**: [docs/FEEDBACK.md](docs/FEEDBACK.md)
@@ -351,17 +353,17 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 
 | Requirement | Target | Current Status | Evidence / Reference |
 | :--- | :---: | :---: | :--- |
-| **Preprod Users** | 50 genuine Preprod users | `0 / 50` | [USERS.md](./USERS.md) *(public Preprod wallet address verified via Indexer verification)* |
-| **Feedback Loop Documented** | Structured feedback & changelog | In Place | [docs/FEEDBACK.md](./docs/FEEDBACK.md) *(structured feedback loop)* |
-| **Updated Documentation & Guide** | Comprehensive onboarding | In Place | [docs/USAGE.md](./docs/USAGE.md) & [README.md](./README.md) |
-| **Community Outreach Materials** | Discord, X, & Direct messages | In Place | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) |
-| **Meaningful Commits** | 20+ commits | 89 commits | Git commit history on `main` branch |
+| **Preprod Users** | 50 genuine Preprod users | `5 / 50` *(In Progress)* | [USERS.md](./USERS.md) *(public Preprod wallet addresses verified via Indexer / contract state)* |
+| **Feedback Loop Documented** | Structured feedback, themes & changelog | ✅ Active | [docs/FEEDBACK.md](./docs/FEEDBACK.md) & [Google Sheet Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) |
+| **Updated Documentation & Guide** | Comprehensive onboarding & troubleshooting | ✅ Complete | [docs/USAGE.md](./docs/USAGE.md) & [README.md](./README.md) |
+| **Community Outreach Materials** | Discord, X, & Direct messages | ✅ Complete | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) |
+| **Meaningful Commits** | 20+ commits | 90+ commits (exceeds requirement) | Git commit history on `main` branch |
 | **Public GitHub Repository** | Public repo | ✅ PASS | [akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault) |
 | **Live Preprod Demo** | Functional dApp | ✅ PASS | [midnight-vault-nine.vercel.app](https://midnight-vault-nine.vercel.app/) |
 | **Canonical Contract** | Verified on Preprod | ✅ PASS | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
 | **MVP Demo Video** | Full functionality | ✅ PASS | [Watch MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link) |
 
-> **Authenticity Assurance**: In strict accordance with challenge rules, no dummy users, synthetic wallet addresses, or simulated feedback are recorded. Genuine on-chain addresses and feedback will be documented as participants interact with the application during the active onboarding window.
+> **Authenticity Assurance**: In strict accordance with challenge rules, no dummy users, synthetic wallet addresses, or simulated feedback are recorded. Verified on-chain addresses and authentic tester feedback are documented as participants interact with the application during the active onboarding window.
 
 ---
 
