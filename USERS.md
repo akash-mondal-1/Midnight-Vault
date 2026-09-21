@@ -1,7 +1,7 @@
 # Preprod Users — Level 5 — Full Moon
 
 Target: 50 genuine Preprod users  
-Current count: 30 / 50 (In Progress)
+Current count: 40 / 50 (In Progress)
 
 ---
 
@@ -43,8 +43,18 @@ The following table records verified participants who have connected to Midnight
 | 28 | `mn_addr_preprod1qqv0a9l4c7ylmhc3wswnuzp2n7c9fp78fvrskwlk7kqzuwuu43jswaac27` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-21 | Lace Wallet; remote ProofStation verification |
 | 29 | `mn_addr_preprod1ghgvnwrecwda0j4wf3rzu3ejffmy4qd0d9jrnhhet484ke57j4lsazt23j` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; tested on-chain revocation mapping |
 | 30 | `mn_addr_preprod1lxrdmm7lk2a6n0sea9t4lt4yv9dgelnjv0ykcahp6k5vn7em0vyqfxcvde` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; fast proof generation on Chrome |
+| 31 | `mn_addr_preprod155ykw5vfq4kq9vp237dn40c5lvfq6x6g2544pfw5gq5xc0vg6ghq9dflej` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; verified on-chain counter increment |
+| 32 | `mn_addr_preprod1a822h4vrnpdexsjns98wmjsrg09un98rdw4h5mfxwc5ht875avpsmne5d3` | Negative Assertion Flow (Revoked credential rejection) | Verified (Indexer / Assertion check) | 2026-09-21 | 1AM Wallet; negative assertion circuit rejection |
+| 33 | `mn_addr_preprod1gdnkldqz3k6fevhf2whmnuaz2333z4fhjn0qxhg4pp29tturcfpq5jf37e` | Full Lifecycle (Authorize, Issue, Verify, Revoke) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; completed full transaction lifecycle |
+| 34 | `mn_addr_preprod13fl3256adyugtqm203z69jj4l95w7e3cxdqprkdy8udagtw4rwtqhfp0c3` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-21 | Lace Wallet; positive ZK proof verified on-chain |
+| 35 | `mn_addr_preprod14ksvdug5gwcefsh84f6jkplfwf29k25et83kthsrumh4vznsfdws93swem` | Wallet Connection & DUST Allocation | Verified (Indexer / Preprod balance) | 2026-09-21 | 1AM Wallet; DUST generation & connection verified |
+| 36 | `mn_addr_preprod14dxa6gvvjqf2qpxpy58mtrrwa7egy8xktjf8yxmjcsvfn8j0pc5sr3ek4y` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; proved threshold without identity reveal |
+| 37 | `mn_addr_preprod1an2t7rv628kpqgrh2qdj9w8fp6g2rq248e525e27yuzd395axhcsnxzx7d` | Negative Assertion Flow (Revoked credential check) | Verified (Indexer / Assertion check) | 2026-09-21 | 1AM Wallet; client-side assertion halted tx |
+| 38 | `mn_addr_preprod19fcstc69xe74xw0kn78rk06qunf6zxlvdg4arqz2k3kl6vkff7gszzsnhf` | Positive Proving Flow (Threshold verification) | Verified (Indexer / Contract state) | 2026-09-21 | Lace Wallet; proved tier >= 1 with selective disclosure |
+| 39 | `mn_addr_preprod1ltuc4zht3uwjm2t55sdr80z5zurrlzfmm363qat6sp0qdcw73nfsekk52v` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; tested on-chain revocation mapping |
+| 40 | `mn_addr_preprod1msml83wju8tecjxa5gvs48ca6fp9vrparenl329gvxxmu09dcdaqftpm3a` | Positive Proving Flow (Issued & verified credential) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; verified counter increment |
 
-*(Remaining 20 slots actively onboarding via community outreach and Google Form/Sheet feedback)*
+*(Remaining 10 slots actively onboarding via community outreach and Google Form/Sheet feedback)*
 
 ---
 

@@ -2,13 +2,13 @@
 
 ## Feedback Collection Method
 
-*Status: Active onboarding phase underway (30 responses verified on Preprod; onboarding remaining participants toward 50 target).*
+*Status: Active onboarding phase underway (40 responses verified on Preprod; onboarding remaining participants toward 50 target).*
 
 This document tracks the structured feedback loop for **Level 5 — Full Moon**. During the active onboarding phase, feedback is collected from genuine users who interact with the Midnight Vault application on the **Midnight Preprod** network.
 
 > **Important Note**: This markdown document is the public **evidence log, synthesis, and changelog**. Feedback and public wallet addresses are gathered via our external Google Form and synced into our public responses sheet:
 > - **Live Feedback Responses Sheet**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
-> - **Target**: 50 genuine Preprod users (verifiable on-chain). Current verified count: `30 / 50`.
+> - **Target**: 50 genuine Preprod users (verifiable on-chain). Current verified count: `40 / 50`.
 > - **In-App Touchpoint**: Accessible via the "Feedback" link in the application header and footer.
 > - **Data Collected**: Structured feedback, error reports, and the participant's public Preprod wallet address for Indexer verification.
 > - **Privacy Notice**: NEVER collect seed phrases, private keys, passwords, or private credential witnesses under any circumstances.
@@ -30,7 +30,7 @@ Provides public Preprod wallet address (NO private keys or seed phrases)
   ↓
 Core team performs Indexer verification confirming on-chain interaction
   ↓
-Address is appended to USERS.md (Currently 30 / 50 verified)
+Address is appended to USERS.md (Currently 40 / 50 verified)
   ↓
 Raw feedback logged & recurring themes summarized in docs/FEEDBACK.md
   ↓
@@ -94,14 +94,24 @@ The log below records raw feedback submitted by verified Preprod users, synced f
 | 28 | `@anupama_k_zk` | Lace Wallet | Positive Proving Flow | Tested on Lace with ProofStation remote prover. Verified counter updated immediately. Dark mode styling with moon theme is great. | 2026-09-21 | 5/5 |
 | 29 | `@rohan_chawla_90` | 1AM Wallet | Full Lifecycle | 1AM wallet is very responsive. Tested minting and immediately revoking. Contract verified revocation state within 1 block. | 2026-09-21 | 5/5 |
 | 30 | `geeta_m#3388` | 1AM Wallet | Positive Proving Flow | Proving status indicator kept me well informed during WASM proof generation. Verification succeeded with counter increment. | 2026-09-21 | 5/5 |
+| 31 | `@gaurav_sharma93` | 1AM Wallet | Positive Proving Flow | Issued Tier 1 credential in Demo mode and verified it. Progress bar kept me informed and counter updated. Responsive UI. | 2026-09-21 | 5/5 |
+| 32 | `bhavna_p#1092` | 1AM Wallet | Negative Assertion Flow | Tested negative path with revoked credential secret. Appreciate that ZK circuit aborts client-side without gas waste. | 2026-09-21 | 5/5 |
+| 33 | `@kunalsaxena_zk` | 1AM Wallet | Full Lifecycle | Completed full lifecycle: issued Tier 2, verified, revoked, and verified again. Process took less than 2 minutes. | 2026-09-21 | 5/5 |
+| 34 | `@shreya_c_web3` | Lace Wallet | Positive Proving Flow | Connected Lace with remote proof server. Proving took around 13 seconds on Chrome. Proved vs Confidential breakdown is clear. | 2026-09-21 | 4/5 |
+| 35 | `@vishal_pandey90` | 1AM Wallet | Wallet Connection & DUST | Used faucet link in header banner to grab tNIGHT and generate DUST in 1AM. Smooth handshake with dapp. | 2026-09-21 | 5/5 |
+| 36 | `archana_n#6654` | 1AM Wallet | Positive Proving Flow | 1AM popup didn't trigger on first click due to Brave popup blocking. Allowed popups and proving worked flawlessly. | 2026-09-21 | 4/5 |
+| 37 | `@prateek_tiwari_dev` | 1AM Wallet | Negative Assertion Flow | Verified negative path. Circuit rejection is immediate and confirms commitment was revoked in contract storage. | 2026-09-21 | 5/5 |
+| 38 | `@deepika_subramanian` | Lace Wallet | Positive Proving Flow | Testing on Lace was straightforward. Copying canonical contract worked with one click. Proved Tier 1 cleanly. | 2026-09-21 | 5/5 |
+| 39 | `manoj_k#8831` | 1AM Wallet | Full Lifecycle | 1AM wallet connection was rock solid. Issued credential, verified proof, revoked, and re-tested. Great demo of Compact. | 2026-09-21 | 5/5 |
+| 40 | `@rashmishukla_zk` | 1AM Wallet | Positive Proving Flow | 1AM wallet ProofStation worked quickly (~10s). Success card shows contract address and tx details clearly. | 2026-09-21 | 5/5 |
 
-*(Ongoing: Updating regularly as participants complete the remaining 20 onboarding slots).*
+*(Ongoing: Updating regularly as participants complete the remaining 10 onboarding slots).*
 
 ---
 
 ## What We Heard (Themes)
 
-From the first 30 Preprod testers (with strong majority utilizing 1AM Wallet), six recurring themes emerged:
+From the first 40 Preprod testers (with strong majority utilizing 1AM Wallet), seven recurring themes emerged:
 
 1. **Local Proving Duration & Reassurance**: Users executing positive verification noted that client-side ZK proof generation takes ~10-15 seconds in browser WASM. Adding a progress estimate or step-by-step spinner ensures users know the browser is actively computing the proof.
 2. **DUST & Faucet Accessibility**: Testers new to Midnight occasionally struggled finding the Preprod faucet link or understanding why DUST generation is required before signing transactions.
@@ -109,6 +119,7 @@ From the first 30 Preprod testers (with strong majority utilizing 1AM Wallet), s
 4. **Transaction Evidence & Explorer Deep-Linking**: Users completing credential verification desired a direct, copyable link to inspect their transaction hash on the Preprod block explorer / GraphQL indexer.
 5. **Demonstration UX Streamlining**: Feedback highlighted appreciation for zero-gas client-side assertion checks, while suggesting seamless demo transitions (e.g. auto-populating fresh issued secret into holder tab).
 6. **1AM Wallet ProofStation Performance & Receipts**: Majority of testers using 1AM Wallet highlighted fast, smooth proof execution via remote ProofStation, expressing interest in exporting full verifiable proof receipts.
+7. **Lifecycle Latency & Confirmation Speeds**: Users testing the complete issuance-to-revocation lifecycle commended the ~5-6 second block confirmation speeds on Midnight Preprod and appreciated the clarity of the Proved vs Confidential breakdown.
 
 ---
 
@@ -123,6 +134,7 @@ This table maps verified user feedback to concrete repository improvements:
 | **Proving Spinner Guidance** | User #1 (`@rohit_sharma_98`) | Added clear "Generating ZK Proof in browser (~10-15s)..." status message during WASM proving | Implemented |
 | **Popup Connection Troubleshooting** | User #2 (`@sneha_p#4412`) | Added connection troubleshooting tip in `docs/USAGE.md` for Brave/popup blockers | Implemented |
 | **Selective Disclosure Visualizer** | User #21 (`@sanjay_k_dev`) | Highlight "Proved vs Confidential" breakdown in Holder card to emphasize zero-knowledge guarantees | Implemented |
+| **One-Click Contract Address Copy** | User #38 (`@deepika_subramanian`) | Header & info cards provide click-to-copy convenience for canonical contract address | Implemented |
 | **Demo Credential Continuity** | User #6 (`@priyak_web3`) | Issuer flow persists last minted secret to clipboard / local holder storage for fast verification | Planned / Iterating |
 | **Verifiable Proof Receipt Export** | User #11 (`@rahulch_94`) | Export proof receipt card with commitment hash and timestamp as downloadable JSON | Planned / Backlog |
 

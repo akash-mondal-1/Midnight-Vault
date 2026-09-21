@@ -12,7 +12,7 @@
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
 - **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
 - **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
-- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 50 genuine Preprod users · Current: 30/50 In Progress)*
+- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 50 genuine Preprod users · Current: 40/50 In Progress)*
 - **User Feedback & Changelog:** [docs/FEEDBACK.md](./docs/FEEDBACK.md)
 - **Live Feedback Responses:** [Google Sheets Responses Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
 - **Tester Onboarding Guide:** [docs/USAGE.md](./docs/USAGE.md)
@@ -341,7 +341,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 ## 13. Level 5 — Full Moon (User Validation)
 
 - **Target**: 50 genuine Preprod users
-- **Current status**: `30 / 50` *(Active Onboarding Phase · 30 on-chain verified participants, remaining 20 in progress)*
+- **Current status**: `40 / 50` *(Active Onboarding Phase · 40 on-chain verified participants, remaining 10 in progress)*
 - **Live Demo**: [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/)
 - **Live Feedback Responses**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
 - **User Registry**: [USERS.md](USERS.md)
@@ -353,7 +353,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 
 | Requirement | Target | Current Status | Evidence / Reference |
 | :--- | :---: | :---: | :--- |
-| **Preprod Users** | 50 genuine Preprod users | `30 / 50` *(In Progress)* | [USERS.md](./USERS.md) *(public Preprod wallet addresses verified via Indexer / contract state)* |
+| **Preprod Users** | 50 genuine Preprod users | `40 / 50` *(In Progress)* | [USERS.md](./USERS.md) *(public Preprod wallet addresses verified via Indexer / contract state)* |
 | **Feedback Loop Documented** | Structured feedback, themes & changelog | ✅ Active | [docs/FEEDBACK.md](./docs/FEEDBACK.md) & [Google Sheet Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) |
 | **Updated Documentation & Guide** | Comprehensive onboarding & troubleshooting | ✅ Complete | [docs/USAGE.md](./docs/USAGE.md) & [README.md](./README.md) |
 | **Community Outreach Materials** | Discord, X, & Direct messages | ✅ Complete | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) |
