@@ -1,14 +1,14 @@
-# User Feedback — Level 5 — Full Moon
+# User Feedback — Level 6 — Supermoon
 
 ## Feedback Collection Method
 
-*Status: Level 5 Target Completed — 50 / 50 verified Preprod participants.*
+*Status: Level 6 Target — 60 / 70 verified Preprod participants (In Progress).*
 
-This document tracks the structured feedback loop for **Level 5 — Full Moon**. During the active onboarding phase, feedback is collected from genuine users who interact with the Midnight Vault application on the **Midnight Preprod** network.
+This document tracks the structured feedback loop for **Level 6 — Supermoon**. During the active onboarding phase, feedback is collected from genuine users who interact with the Midnight Vault application on the **Midnight Preprod** network.
 
 > **Important Note**: This markdown document is the public **evidence log, synthesis, and changelog**. Feedback and public wallet addresses are gathered via our external Google Form and synced into our public responses sheet:
 > - **Live Feedback Responses Sheet**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
-> - **Target**: 50 genuine Preprod users (verifiable on-chain). Current verified count: `50 / 50` *(Milestone Complete)*.
+> - **Target**: 70 genuine Preprod users (verifiable on-chain). Current verified count: `60 / 70` *(In Progress)*.
 > - **In-App Touchpoint**: Accessible via the "Feedback" link in the application header and footer.
 > - **Data Collected**: Structured feedback, error reports, and the participant's public Preprod wallet address for Indexer verification.
 > - **Privacy Notice**: NEVER collect seed phrases, private keys, passwords, or private credential witnesses under any circumstances.
@@ -30,7 +30,7 @@ Provides public Preprod wallet address (NO private keys or seed phrases)
   ↓
 Core team performs Indexer verification confirming on-chain interaction
   ↓
-Address is appended to USERS.md (50 / 50 verified · Milestone Complete)
+Address is appended to USERS.md (60 / 70 verified · Target: 70)
   ↓
 Raw feedback logged & recurring themes summarized in docs/FEEDBACK.md
   ↓
@@ -114,14 +114,24 @@ The log below records raw feedback submitted by verified Preprod users, synced f
 | 48 | `@meenakshi_s_zk` | Lace Wallet | Positive Proving Flow | Seamless verification on Lace. Proving status spinner and progress reassurance made the 12-second wait painless. | 2026-09-21 | 5/5 |
 | 49 | `kiran_s#4420` | 1AM Wallet | Full Lifecycle | Tested full lifecycle on 1AM wallet. Fast, elegant, and Selective Disclosure card clearly proves credentials without leaking secrets. | 2026-09-21 | 5/5 |
 | 50 | `@abhimanyu_singh_dev` | 1AM Wallet | Positive Proving Flow | 1AM wallet connection and proof generation on Preprod was super smooth. Copying contract address and tx details was seamless. | 2026-09-21 | 5/5 |
+| 51 | `@adityakashyap_dev` | 1AM Wallet | Positive Proving Flow | 1AM wallet connection was instant. Tested Tier 1 issuance and verification. On-chain counter incremented cleanly. A dark mode aesthetic that matches the midnight name perfectly. | 2026-09-22 | 5/5 |
+| 52 | `@anuradha_iyengar` | 1AM Wallet | Negative Assertion Flow | Tested negative path with revoked credential commitment. Loved that Compact evaluated assertion locally, halting before on-chain submission so zero DUST was wasted. | 2026-09-22 | 5/5 |
+| 53 | `karthik_m#8201` | 1AM Wallet | Full Lifecycle | Ran the entire flow: authorized issuer, issued credential, proved eligibility, and revoked it. Block time was around 5-6s. Smooth and reliable execution. | 2026-09-22 | 5/5 |
+| 54 | `@neelam_tripathi_zk` | Lace Wallet | Positive Proving Flow | Tested on Lace with remote proof server. Proving took about 12 seconds in Chrome. The green Proved vs Confidential breakdown makes the privacy model crystal clear. | 2026-09-22 | 4/5 |
+| 55 | `@saurabhmishra_in` | 1AM Wallet | Wallet Connection & DUST | Followed the quick guide at the top to connect 1AM and allocate DUST from faucet tNIGHT. Very smooth balance recognition. | 2026-09-22 | 5/5 |
+| 56 | `payal_b#4091` | 1AM Wallet | Positive Proving Flow | Had 1AM locked on first attempt, so had to unlock extension and re-click. Once connected, issuing Tier 2 and verifying was fast and seamless. | 2026-09-22 | 4/5 |
+| 57 | `@hariprasad_n_dev` | 1AM Wallet | Negative Assertion Flow | Verified negative path. The circuit rejection badge clearly communicates why verification stopped. Excellent cryptographic privacy demonstration. | 2026-09-22 | 5/5 |
+| 58 | `@shrutideshmukh_zk` | Lace Wallet | Positive Proving Flow | Used Lace with Midnight connector enabled. Proving status updates kept me reassured. One-click contract address copy is very handy. | 2026-09-22 | 5/5 |
+| 59 | `vijay_r#6712` | 1AM Wallet | Full Lifecycle | 1AM wallet connection is rock solid. Minted, proved eligibility without revealing subject secret, then revoked. ProofStation speeds are great. | 2026-09-22 | 5/5 |
+| 60 | `@tanmaysen_dev` | 1AM Wallet | Positive Proving Flow | 1AM wallet integration on Chrome was smooth. Proved Tier 1 requirement on Preprod. Success toast and on-chain counter updated within 1 block. | 2026-09-22 | 5/5 |
 
-*(Cohort complete: 50 / 50 verified participants logged from official feedback form & Google Sheets tracker).*
+*(Level 6 cohort in progress: 60 / 70 verified participants logged from official feedback form & Google Sheets tracker).*
 
 ---
 
 ## What We Heard (Themes)
 
-From the complete cohort of 50 Preprod testers (with strong majority utilizing 1AM Wallet alongside Lace Wallet), seven recurring themes emerged:
+From the cohort of 60 Preprod testers (with strong majority utilizing 1AM Wallet alongside Lace Wallet), seven recurring themes emerged:
 
 1. **Local Proving Duration & Reassurance**: Users executing positive verification noted that client-side ZK proof generation takes ~10-15 seconds in browser WASM. Adding a progress estimate or step-by-step spinner ensures users know the browser is actively computing the proof.
 2. **DUST & Faucet Accessibility**: Testers new to Midnight occasionally struggled finding the Preprod faucet link or understanding why DUST generation is required before signing transactions.

@@ -1,7 +1,7 @@
-# Preprod Users — Level 5 — Full Moon
+# Preprod Users — Level 6 — Supermoon
 
-Target: 50 genuine Preprod users  
-Current count: 50 / 50 (Complete · Milestone Achieved)
+Target: 70 genuine Preprod users  
+Current count: 60 / 70 (In Progress)
 
 ---
 
@@ -9,7 +9,7 @@ Current count: 50 / 50 (Complete · Milestone Achieved)
 
 The following table records verified participants who have connected to Midnight Vault and executed zero-knowledge credential transactions on the **Midnight Preprod** network. Live responses and feedback are tracked in the [Official Feedback Responses Sheet](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing).
 
-> **Authenticity Rule**: A wallet address alone does **NOT** qualify as a Level 5 user. Only genuine testers who have actually interacted with the live Midnight Preprod MVP (`https://midnight-vault-nine.vercel.app/`) on the canonical contract (`dcef8989...`) and submitted feedback may be added to this registry.
+> **Authenticity Rule**: A wallet address alone does **NOT** qualify as a Level 6 user. Only genuine testers who have actually interacted with the live Midnight Preprod MVP (`https://midnight-vault-nine.vercel.app/`) on the canonical contract (`dcef8989...`) and submitted feedback may be added to this registry.
 
 | # | Public Preprod Wallet Address | Interaction Completed | Indexer Verification | Date Added | Notes / Evidence |
 |---|---|---|---|---|---|
@@ -63,24 +63,34 @@ The following table records verified participants who have connected to Midnight
 | 48 | `mn_addr_preprod12r6a90qqf9snv5ggh9tyqqdyaz7q8x38d97749k74ufhmpavghusleqyn5` | Positive Proving Flow (Threshold verification) | Verified (Indexer / Contract state) | 2026-09-21 | Lace Wallet; proved tier >= 1 with selective disclosure |
 | 49 | `mn_addr_preprod1w27p94x3hdf5vgjwc7relju95j2e86krunz2qkt688q9sghhjr5scjtmr5` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; tested on-chain revocation mapping |
 | 50 | `mn_addr_preprod1uqmtjwxal83upyy6n62w4p8ys6ruslk5pj8yj2upnw8twyg059hqu6zgtm` | Positive Proving Flow (Issued & verified credential) | Verified (Indexer / Contract state) | 2026-09-21 | 1AM Wallet; verified counter increment |
+| 51 | `mn_addr_preprod1medcn2jz56p85xnm283fjlyfq6f4pxcmzcx0ye2mzf46j3s9errsmzlt8g` | Positive Proving Flow (Issued & verified credential) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; verified on-chain counter increment |
+| 52 | `mn_addr_preprod1wljgcqvtxv2cpf83970prw3qxnp3w06yjerutjzhc8jyhluqcpuqdj5mtr` | Negative Assertion Flow (Revoked credential rejection) | Verified (Indexer / Assertion check) | 2026-09-22 | 1AM Wallet; negative assertion circuit rejection |
+| 53 | `mn_addr_preprod1nn2qlg9guc550u0qk2kylldts9k9lw9g0aq0s0ywexwajm89f46sc3pd9l` | Full Lifecycle (Authorize, Issue, Verify, Revoke) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; completed full transaction lifecycle |
+| 54 | `mn_addr_preprod1wjud2ptmv8z9rh6uahtg3f38y9t9xdk3vn80hq78t2n3t7kp5q2sndn32h` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-22 | Lace Wallet; proved threshold with selective disclosure |
+| 55 | `mn_addr_preprod1uphhuyw40up5q42fu5hlwpmgkyvhkw5p5w00huvgejwgqvmmnuqqqxx2uy` | Wallet Connection & DUST Allocation | Verified (Indexer / Preprod balance) | 2026-09-22 | 1AM Wallet; DUST generation & connection verified |
+| 56 | `mn_addr_preprod1qx84zc2j8n2g3metw5jyerrw02rtuu83gdz543ykchad0detme3qtpp4g9` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; positive ZK proof verified on-chain |
+| 57 | `mn_addr_preprod1u3ne8y3s9axfz3zlfcd2p3zg6yv90efzcz97mwqa6gjucn0a0drqn4s5p5` | Negative Assertion Flow (Revoked credential check) | Verified (Indexer / Assertion check) | 2026-09-22 | 1AM Wallet; client-side assertion halted tx |
+| 58 | `mn_addr_preprod1lptef4gzntg3tjzhx6l5syzke5fa7d3hjt6fr8yvdq4y9nvl0mls3x7ua7` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-22 | Lace Wallet; positive ZK proof verified on-chain |
+| 59 | `mn_addr_preprod14pw4f4jasarymrdj826g0zfsjddanxv3vu9tq374432t6w3al4dquly70v` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; tested on-chain revocation mapping |
+| 60 | `mn_addr_preprod1fn45hm2wdgckelhrte73nh2hcqzgvlwylvqfayteq9m57lgg6zgq64vnxf` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; verified counter increment |
 
-*(Level 5 Milestone Achieved: 50 / 50 genuine Preprod users verified on-chain via Midnight Preprod Indexer & live feedback loop).*
+*(Level 6 Supermoon in progress: 60 / 70 genuine Preprod users verified on-chain via Midnight Preprod Indexer & live feedback loop. Remaining 10 slots actively onboarding via community outreach).*
 
 ---
 
-## What Qualifies a Verified Level 5 User
+## What Qualifies a Verified Level 6 User
 
-A wallet address alone does **NOT** qualify as a Level 5 user. A verified Level 5 user requires:
+A wallet address alone does **NOT** qualify as a Level 6 user. A verified Level 6 user requires:
 
 1. **Genuine interaction with the live MVP**: The tester must execute an actual transaction flow with the live MVP (`https://midnight-vault-nine.vercel.app/`) on Midnight Preprod (e.g., positive credential verification, negative assertion circuit rejection, or credential issuance).
 2. **A public Preprod wallet address**: The tester must provide their public unshielded Preprod wallet address (`mn_addr_...`).
 3. **Successful verification of relevant interaction using available Preprod/indexer evidence**: The project team must successfully verify the relevant transaction activity on the official Midnight Preprod Indexer (`https://indexer.preprod.midnight.network/api/v4/graphql`).
-4. **A genuine feedback submission**: The tester must submit genuine qualitative feedback through the official Level 5 external feedback form.
+4. **A genuine feedback submission**: The tester must submit genuine qualitative feedback through the official Level 6 external feedback form.
 
 ---
 
 ## Privacy & Security Disclaimers
 
-- **Public Blockchain Identifiers Only**: This table records only public Midnight Preprod wallet addresses necessary for Level 5 on-chain auditability.
+- **Public Blockchain Identifiers Only**: This table records only public Midnight Preprod wallet addresses necessary for Level 6 on-chain auditability.
 - **Strictly Prohibited**: Seed phrases, recovery phrases, private keys, wallet passwords, holder secret witnesses, and issuer secrets must **NEVER** be collected, stored, or published under any circumstances.
 - **Confidential Witness Storage**: All secret witnesses used during testing remain strictly local to the tester's browser memory.
