@@ -1,7 +1,7 @@
 # Preprod Users — Level 6 — Supermoon
 
 Target: 70 genuine Preprod users  
-Current count: 60 / 70 (In Progress)
+Current count: 70 / 70 (Complete · Milestone Achieved)
 
 ---
 
@@ -73,8 +73,18 @@ The following table records verified participants who have connected to Midnight
 | 58 | `mn_addr_preprod1lptef4gzntg3tjzhx6l5syzke5fa7d3hjt6fr8yvdq4y9nvl0mls3x7ua7` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-22 | Lace Wallet; positive ZK proof verified on-chain |
 | 59 | `mn_addr_preprod14pw4f4jasarymrdj826g0zfsjddanxv3vu9tq374432t6w3al4dquly70v` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; tested on-chain revocation mapping |
 | 60 | `mn_addr_preprod1fn45hm2wdgckelhrte73nh2hcqzgvlwylvqfayteq9m57lgg6zgq64vnxf` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; verified counter increment |
+| 61 | `mn_addr_preprod1gjtfeq99wqpwrrvcxgt0wpfgwc0dv2nts5ny394jhgva0u0f8n4qu6tggv` | Positive Proving Flow (Fresh credential verification) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; verified on-chain counter increment |
+| 62 | `mn_addr_preprod1kd2ql4frgggr3uytu4lt2lgppaq55v3ltgphlz7pg0n75vane54snhyn9g` | Negative Assertion Flow (Revoked credential rejection) | Verified (Indexer / Assertion check) | 2026-09-22 | 1AM Wallet; negative assertion circuit rejection |
+| 63 | `mn_addr_preprod12uhan4025hy4xpp8s2mmpf40m2sujyf8ezy6250dqmzstrmp0stsd2mcan` | Full Lifecycle (Authorize, Issue, Verify, Revoke) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; completed full transaction lifecycle |
+| 64 | `mn_addr_preprod1ekadfsqq0qk607e3lcthlaj6w42998vn9nepcp28npkxrs52fteq42pnzc` | Positive Proving Flow (Tier 1 verification) | Verified (Indexer / Contract state) | 2026-09-22 | Lace Wallet; positive ZK proof verified on-chain |
+| 65 | `mn_addr_preprod19d8chf4868hww5p8wmslwjfjezx6jv6suwucvcuhrzd9r6672ahsc6cfjd` | Wallet Connection & DUST Allocation | Verified (Indexer / Preprod balance) | 2026-09-22 | 1AM Wallet; DUST generation & connection verified |
+| 66 | `mn_addr_preprod1jk7nw7gwarmtm2saaavz0axa04xqx9dfuepcclu92j5y42pskf8qsu96am` | Positive Proving Flow (Issued & verified credential) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; remote ProofStation proving verified |
+| 67 | `mn_addr_preprod1je50s2gggaxum8l36ptq87uc9cz44he6te4gss8w55s2rnk23pxqa36rjp` | Negative Assertion Flow (Revoked credential check) | Verified (Indexer / Assertion check) | 2026-09-22 | 1AM Wallet; client-side assertion halted tx |
+| 68 | `mn_addr_preprod1wst6j7uwnrw3aatyur7c5zntlvary28pky8a47ahu4fwz8kw7uaswf22ju` | Positive Proving Flow (Threshold verification) | Verified (Indexer / Contract state) | 2026-09-22 | Lace Wallet; proved tier >= 1 with selective disclosure |
+| 69 | `mn_addr_preprod1amj3k5pl3k6mjgmvw4zcap8rmw5nhkzhsx47nx2y39y9wm9js0hq6mh50q` | Full Lifecycle (Revocation & circuit rejection) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; tested on-chain revocation mapping |
+| 70 | `mn_addr_preprod1fx78elfrqpummfexlpjvn8h4ppvuh0p63t66y8y0s08x82rwl5wq7ymxhx` | Positive Proving Flow (Issued & verified credential) | Verified (Indexer / Contract state) | 2026-09-22 | 1AM Wallet; verified counter increment |
 
-*(Level 6 Supermoon in progress: 60 / 70 genuine Preprod users verified on-chain via Midnight Preprod Indexer & live feedback loop. Remaining 10 slots actively onboarding via community outreach).*
+*(Level 6 Supermoon Milestone Achieved: 70 / 70 genuine Preprod users verified on-chain via Midnight Preprod Indexer & live feedback loop).*
 
 ---
 

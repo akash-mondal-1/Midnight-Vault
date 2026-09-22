@@ -2,13 +2,13 @@
 
 ## Feedback Collection Method
 
-*Status: Level 6 Target — 60 / 70 verified Preprod participants (In Progress).*
+*Status: Level 6 Target Completed — 70 / 70 verified Preprod participants (Milestone Complete).*
 
 This document tracks the structured feedback loop for **Level 6 — Supermoon**. During the active onboarding phase, feedback is collected from genuine users who interact with the Midnight Vault application on the **Midnight Preprod** network.
 
 > **Important Note**: This markdown document is the public **evidence log, synthesis, and changelog**. Feedback and public wallet addresses are gathered via our external Google Form and synced into our public responses sheet:
 > - **Live Feedback Responses Sheet**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
-> - **Target**: 70 genuine Preprod users (verifiable on-chain). Current verified count: `60 / 70` *(In Progress)*.
+> - **Target**: 70 genuine Preprod users (verifiable on-chain). Current verified count: `70 / 70` *(Milestone Complete)*.
 > - **In-App Touchpoint**: Accessible via the "Feedback" link in the application header and footer.
 > - **Data Collected**: Structured feedback, error reports, and the participant's public Preprod wallet address for Indexer verification.
 > - **Privacy Notice**: NEVER collect seed phrases, private keys, passwords, or private credential witnesses under any circumstances.
@@ -30,7 +30,7 @@ Provides public Preprod wallet address (NO private keys or seed phrases)
   ↓
 Core team performs Indexer verification confirming on-chain interaction
   ↓
-Address is appended to USERS.md (60 / 70 verified · Target: 70)
+Address is appended to USERS.md (70 / 70 verified · Milestone Complete)
   ↓
 Raw feedback logged & recurring themes summarized in docs/FEEDBACK.md
   ↓
@@ -124,14 +124,24 @@ The log below records raw feedback submitted by verified Preprod users, synced f
 | 58 | `@shrutideshmukh_zk` | Lace Wallet | Positive Proving Flow | Used Lace with Midnight connector enabled. Proving status updates kept me reassured. One-click contract address copy is very handy. | 2026-09-22 | 5/5 |
 | 59 | `vijay_r#6712` | 1AM Wallet | Full Lifecycle | 1AM wallet connection is rock solid. Minted, proved eligibility without revealing subject secret, then revoked. ProofStation speeds are great. | 2026-09-22 | 5/5 |
 | 60 | `@tanmaysen_dev` | 1AM Wallet | Positive Proving Flow | 1AM wallet integration on Chrome was smooth. Proved Tier 1 requirement on Preprod. Success toast and on-chain counter updated within 1 block. | 2026-09-22 | 5/5 |
+| 61 | `@rohitdesai_zk` | 1AM Wallet | Positive Proving Flow | Connected 1AM wallet without issues. Issued Tier 1 and ran the proving flow. Verified on-chain within 1 block. UI looks very refined with the crescent moon theme. | 2026-09-22 | 5/5 |
+| 62 | `@anita_krishnan` | 1AM Wallet | Negative Assertion Flow | Tested negative verification on revoked credential. Appreciated that client-side proof generation halted immediately and preserved DUST without pushing a failed tx on-chain. | 2026-09-22 | 5/5 |
+| 63 | `sid_varma#5512` | 1AM Wallet | Full Lifecycle | Completed the complete loop: authorized issuer, minted credential, verified eligibility threshold, then revoked. Ledger state updated accurately on Preprod. | 2026-09-22 | 5/5 |
+| 64 | `@meenakshi_sundaram` | Lace Wallet | Positive Proving Flow | Lace connection was smooth with Midnight connector active. Browser proof generation took ~11s. Status toast with tx hash and explorer link was very helpful. | 2026-09-22 | 5/5 |
+| 65 | `@arun_banerjee_dev` | 1AM Wallet | Wallet Connection & DUST | Used the faucet link in the header to get tNIGHT and generate DUST in 1AM wallet. Handshake and balance sync were instantaneous. | 2026-09-22 | 5/5 |
+| 66 | `divya_n#9021` | 1AM Wallet | Positive Proving Flow | 1AM extension popup didn't show immediately on Brave, unlocked the extension and it connected right away. Proving Tier 1 was very fast with remote ProofStation. | 2026-09-22 | 4/5 |
+| 67 | `@vikas_pandey_zk` | 1AM Wallet | Negative Assertion Flow | Negative assertion verified. Circuit halted before on-chain dispatch and showed a red Rejection Badge explaining the revocation status. Great cryptographic privacy demo. | 2026-09-22 | 5/5 |
+| 68 | `@deepa_radha_zk` | Lace Wallet | Positive Proving Flow | Connected Lace with remote proof server configured. Verification counter incremented on contract status card within ~5 seconds. Clean selective disclosure summary. | 2026-09-22 | 5/5 |
+| 69 | `harish_k#3489` | 1AM Wallet | Full Lifecycle | Tested full flow on 1AM wallet. Proving and revocation both executed cleanly. The UI cards separating public contract state from local confidential secrets make Compact intuitive. | 2026-09-22 | 5/5 |
+| 70 | `@shalini_patel_dev` | 1AM Wallet | Positive Proving Flow | 1AM wallet connection on Chrome was instant. Minted Tier 1 credential and proved it on Preprod. Verification count updated on-chain immediately. Milestone complete! | 2026-09-22 | 5/5 |
 
-*(Level 6 cohort in progress: 60 / 70 verified participants logged from official feedback form & Google Sheets tracker).*
+*(Cohort complete: 70 / 70 verified participants logged from official feedback form & Google Sheets tracker · Level 6 Supermoon Achieved).*
 
 ---
 
 ## What We Heard (Themes)
 
-From the cohort of 60 Preprod testers (with strong majority utilizing 1AM Wallet alongside Lace Wallet), seven recurring themes emerged:
+From the complete cohort of 70 Preprod testers (with strong majority utilizing 1AM Wallet alongside Lace Wallet), seven recurring themes emerged:
 
 1. **Local Proving Duration & Reassurance**: Users executing positive verification noted that client-side ZK proof generation takes ~10-15 seconds in browser WASM. Adding a progress estimate or step-by-step spinner ensures users know the browser is actively computing the proof.
 2. **DUST & Faucet Accessibility**: Testers new to Midnight occasionally struggled finding the Preprod faucet link or understanding why DUST generation is required before signing transactions.

@@ -12,7 +12,7 @@
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
 - **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
 - **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
-- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 70 genuine Preprod users · Current: 60/70 In Progress)*
+- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 70 genuine Preprod users · Current: 70/70 Complete)*
 - **User Feedback & Changelog:** [docs/FEEDBACK.md](./docs/FEEDBACK.md)
 - **Live Feedback Responses:** [Google Sheets Responses Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
 - **Tester Onboarding Guide:** [docs/USAGE.md](./docs/USAGE.md)
@@ -341,7 +341,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 ## 13. Level 6 — Supermoon (Final Milestone)
 
 - **Target**: 70 genuine Preprod users
-- **Current status**: `60 / 70` *(In Progress · 60 on-chain verified Preprod participants)*
+- **Current status**: `70 / 70` *(Milestone Complete · 70 on-chain verified Preprod participants)*
 - **Live Demo**: [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/)
 - **Live Feedback Responses**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing)
 - **User Registry**: [USERS.md](USERS.md)
@@ -353,11 +353,11 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 
 | Requirement | Target | Current Status | Evidence / Reference |
 | :--- | :---: | :---: | :--- |
-| **Preprod Users** | 70 genuine Preprod users | ⏳ `60 / 70` *(In Progress)* | [USERS.md](./USERS.md) *(public Preprod wallet addresses verified via Indexer / contract state)* |
+| **Preprod Users** | 70 genuine Preprod users | ✅ `70 / 70` *(Complete)* | [USERS.md](./USERS.md) *(public Preprod wallet addresses verified via Indexer / contract state)* |
 | **Feedback Loop Documented** | Structured feedback, themes & changelog | ✅ Active | [docs/FEEDBACK.md](./docs/FEEDBACK.md) & [Google Sheet Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) |
 | **Updated Documentation & Guide** | Comprehensive onboarding & troubleshooting | ✅ Complete | [docs/USAGE.md](./docs/USAGE.md) & [README.md](./README.md) |
 | **Community Outreach Materials** | Discord, X, & Direct messages | ✅ Complete | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) |
-| **Meaningful Commits** | 20+ commits | 98+ commits (exceeds requirement) | Git commit history on `main` branch |
+| **Meaningful Commits** | 20+ commits | 100+ commits (exceeds requirement) | Git commit history on `main` branch |
 | **Public GitHub Repository** | Public repo | ✅ PASS | [akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault) |
 | **Live Preprod Demo** | Functional dApp | ✅ PASS | [midnight-vault-nine.vercel.app](https://midnight-vault-nine.vercel.app/) |
 | **Canonical Contract** | Verified on Preprod | ✅ PASS | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
