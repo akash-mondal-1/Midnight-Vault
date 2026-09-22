@@ -10,8 +10,8 @@ import { getIssuerId, getUserId, getCredentialCommitment } from '@/lib/credentia
 import { toHex, fromHex } from '@/lib/hex-utils';
 import { Shield, Orbit, Lock, Sparkles, ExternalLink, Copy, CheckCircle, RefreshCw, Key, ShieldCheck, XCircle, MessageSquare } from 'lucide-react';
 
-// Configurable Level 5 user feedback link (defaults to repo feedback document until external form is finalized)
-const FEEDBACK_URL = 'https://github.com/akash-mondal-1/Midnight-Vault/blob/main/docs/FEEDBACK.md';
+// Mandatory Level 5 & Level 6 User Feedback Tracker (Google Sheet format)
+const FEEDBACK_URL = 'https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing';
 
 const to32Bytes = (text: string): Uint8Array => {
   const arr = new Uint8Array(32);
@@ -578,7 +578,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full max-w-6xl mt-32 border-t border-white/10 pt-12 pb-8 flex flex-col md:flex-row justify-between items-center text-sm text-silver/60 gap-4" role="contentinfo">
-        <p>Built for the Midnight DApp Challenge — Level 5 Full Moon.</p>
+        <p>Built for the Midnight DApp Challenge — Level 6 Supermoon.</p>
         <div className="flex items-center gap-6">
           <a
             href={FEEDBACK_URL}
