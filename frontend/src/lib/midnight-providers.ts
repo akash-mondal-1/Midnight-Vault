@@ -12,11 +12,12 @@ import { createProverKey, createVerifierKey, createZKIR } from '@midnight-ntwrk/
 import type { ConnectedAPI } from '@midnight-ntwrk/dapp-connector-api';
 import type { MidnightProviders, UnboundTransaction } from '@midnight-ntwrk/midnight-js-types';
 import { Transaction } from '@midnight-ntwrk/ledger-v7';
+import { toHex, fromHex } from './hex-utils';
 
-export { toHex, fromHex } from './hex-utils';
+export { toHex, fromHex };
 
 // Custom ZK Config Provider prioritizing binary artifacts (.prover, .verifier, .bzkir)
-class CustomZkConfigProvider extends FetchZkConfigProvider {
+class CustomZkConfigProvider extends FetchZkConfigProvider<string> {
   private async fetchWithFallback(
     path: string,
     circuitId: string,
@@ -122,7 +123,7 @@ export const initializeProviders = async (
 
   // Create ZK Config Provider with fast fallback logic
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const zkConfigProvider = new CustomZkConfigProvider(origin, fetch.bind(window));
+  const zkConfigProvider = new CustomZkConfigProvider(origin, fetch.bind(window) as any);
 
   return {
     privateStateProvider: privateStateProviderInstance as any,
@@ -132,13 +133,13 @@ export const initializeProviders = async (
     walletProvider: {
       getCoinPublicKey: () => coinPublicKey,
       getEncryptionPublicKey: () => encryptionPublicKey,
-      balanceTx: async (tx: UnboundTransaction) => {
+      balanceTx: async (tx: UnboundTransaction): Promise<any> => {
         const txHex = toHex(tx.serialize());
         console.log('[MidnightVault] Requesting transaction balancing from Lace wallet...');
         const received = await connectedAPI.balanceUnsealedTransaction(txHex);
         console.log('[MidnightVault] Received balanced transaction from Lace wallet');
         const rawHex = typeof received === 'string' ? received : received?.tx;
-        return Transaction.deserialize('signature', 'proof', 'binding', fromHex(rawHex));
+        return Transaction.deserialize('signature', 'proof', 'binding', fromHex(rawHex)) as any;
       },
     },
     midnightProvider: {

@@ -180,7 +180,7 @@ export default function Home() {
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
                 <div className="w-2 h-2 rounded-full bg-green-400" />
                 <span className="text-sm text-green-300 font-mono">
-                  {walletType === 'Lace' ? 'Lace: ' : walletType === 'Nightly' ? 'Nightly: ' : 'Wallet: '}
+                  {walletType === 'lace' ? 'Lace: ' : walletType === '1am' ? '1AM: ' : 'Wallet: '}
                   {address ? truncateAddress(address) : 'Connected'}
                 </span>
               </div>

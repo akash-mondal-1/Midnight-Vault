@@ -25,9 +25,9 @@ export const createVaultWitnesses = () => ({
 
 const contractCtor = (VaultContractModule as any).Contract || VaultContractModule;
 
-export const compiledVaultContract = CompiledContract.make(
+export const compiledVaultContract: any = (CompiledContract.make(
   'Vault',
   contractCtor as any
-).pipe(
-  CompiledContract.withWitnesses(createVaultWitnesses())
+) as any).pipe(
+  (CompiledContract.withWitnesses as any)(createVaultWitnesses())
 );
