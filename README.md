@@ -10,11 +10,11 @@
 
 - **Live Preprod Demo:** [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/) *(Live Midnight Vault Application on Preprod)*
 - **GitHub Repository:** [https://github.com/akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault)
-- **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile)*
+- **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile · 5+ Broadcast Updates & Community Outreach)*
 - **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
-- **Preprod Users Registry:** [USERS.md](./USERS.md) *(Target: 70 genuine Preprod users · Current: 70/70 Complete)*
+- **Preprod Users Registry:** [USERS.md](./USERS.md) · [LAUNCH_USERS.md](./LAUNCH_USERS.md) *(Target: 70 genuine Preprod users · Current: 70/70 Complete)*
 - **Mandatory User Feedback Tracker (Google Sheet):** [Official Feedback Responses Sheet](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) *(Mandatory Level 5 & 6 Format)*
-- **User Feedback & Changelog:** [docs/FEEDBACK.md](./docs/FEEDBACK.md)
+- **User Feedback & Changelog:** [FEEDBACK.md](./FEEDBACK.md) · [docs/FEEDBACK.md](./docs/FEEDBACK.md)
 - **Tester Onboarding Guide:** [docs/USAGE.md](./docs/USAGE.md)
 - **Community Outreach Materials:** [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md)
 
@@ -344,10 +344,10 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 - **Current status**: `70 / 70` *(Milestone Complete · 70 on-chain verified Preprod participants)*
 - **Live Demo**: [https://midnight-vault-nine.vercel.app/](https://midnight-vault-nine.vercel.app/)
 - **Mandatory User Feedback Tracker**: [Google Sheets Feedback Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) *(Mandatory Level 5 & 6 Format)*
-- **User Registry**: [USERS.md](USERS.md)
+- **User Registry**: [USERS.md](USERS.md) · [LAUNCH_USERS.md](LAUNCH_USERS.md)
 - **User Guide**: [docs/USAGE.md](docs/USAGE.md)
-- **Feedback Loop & Changelog**: [docs/FEEDBACK.md](docs/FEEDBACK.md)
-- **Community Outreach Materials**: [docs/USER_OUTREACH.md](docs/USER_OUTREACH.md)
+- **Feedback Loop & Changelog**: [FEEDBACK.md](FEEDBACK.md) · [docs/FEEDBACK.md](docs/FEEDBACK.md)
+- **Community Outreach & X Broadcasts**: [docs/USER_OUTREACH.md](docs/USER_OUTREACH.md) · [@Mid_nightVault_](https://x.com/Mid_nightVault_)
 
 > 📋 **MANDATORY GOOGLE SHEET FEEDBACK TRACKER**:  
 > In strict compliance with Level 5 & Level 6 challenge rules, all structured user feedback, tester profiles, and indexer-verified wallet addresses are collected and published in our official Google Sheet:  
@@ -357,12 +357,12 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically executes 
 
 | Requirement | Target | Current Status | Evidence / Reference |
 | :--- | :---: | :---: | :--- |
-| **Preprod Users** | 70 genuine Preprod users | ✅ `70 / 70` *(Complete)* | [USERS.md](./USERS.md) *(public Preprod wallet addresses verified via Indexer / contract state)* |
+| **Preprod Users** | 70 genuine Preprod users | ✅ `70 / 70` *(Complete)* | [USERS.md](./USERS.md) & [LAUNCH_USERS.md](./LAUNCH_USERS.md) *(70 on-chain Preprod addresses verified via Indexer)* |
 | **Mandatory Feedback Google Sheet** | Live Google Sheet with responses | ✅ PASS | [Official Google Sheet Tracker](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) |
-| **Feedback Loop Documented** | Structured feedback, themes & changelog | ✅ Active | [docs/FEEDBACK.md](./docs/FEEDBACK.md) *(synthesis, metrics & product changelog)* |
+| **Feedback Loop Documented** | Structured feedback, themes & changelog | ✅ Active | [FEEDBACK.md](./FEEDBACK.md) & [docs/FEEDBACK.md](./docs/FEEDBACK.md) *(synthesis, metrics & product changelog)* |
 | **Updated Documentation & Guide** | Comprehensive onboarding & troubleshooting | ✅ Complete | [docs/USAGE.md](./docs/USAGE.md) & [README.md](./README.md) |
-| **Community Outreach Materials** | Discord, X, & Direct messages | ✅ Complete | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) |
-| **Meaningful Commits** | 30+ commits | 100+ commits (exceeds requirement) | Git commit history on `main` branch |
+| **Community Outreach Materials** | Discord, X, & Direct messages | ✅ Complete | [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md) & [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(5+ verified broadcast updates)* |
+| **Meaningful Commits** | 30+ commits | 102+ commits (exceeds requirement) | Verified via `git log` on `main` branch |
 | **Public GitHub Repository** | Public repo | ✅ PASS | [akash-mondal-1/Midnight-Vault](https://github.com/akash-mondal-1/Midnight-Vault) |
 | **Live Preprod Demo** | Functional dApp | ✅ PASS | [midnight-vault-nine.vercel.app](https://midnight-vault-nine.vercel.app/) |
 | **Canonical Contract** | Verified on Preprod | ✅ PASS | `dcef898920d314ca3ad8c512ec356befac3407c730700b0323cd9577faadd18f` |
