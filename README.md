@@ -13,7 +13,7 @@
 - **Product X (Twitter):** [@Mid_nightVault_](https://x.com/Mid_nightVault_) *(Official Product X Profile · 5+ Broadcast Updates & Community Outreach)*
 - **Demo Video:** [Watch the Midnight Vault MVP Demo](https://drive.google.com/file/d/1zPzHtmwoX7Y_Ul8eqLfmV5v_1o_4YMRQ/view?usp=drive_link)
 - **Preprod Users Registry:** [USERS.md](./USERS.md) · [LAUNCH_USERS.md](./LAUNCH_USERS.md) *(Target: 70 genuine Preprod users · Current: 70/70 Complete)*
-- **Mandatory User Feedback Tracker (Google Sheet):** [Official Feedback Responses Sheet](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=sharing) *(Mandatory Level 5 & 6 Format)*
+- **Mandatory User Feedback Tracker (Google Sheet):** [Official Feedback Responses Sheet](https://docs.google.com/spreadsheets/d/16XIENbP254GiD5WdvLvrPDdfKkb8Q_tTMwdHzKhGYVI/edit?usp=drivesdk) *(Mandatory Level 5 & 6 Format)*
 - **User Feedback & Changelog:** [FEEDBACK.md](./FEEDBACK.md) · [docs/FEEDBACK.md](./docs/FEEDBACK.md)
 - **Tester Onboarding Guide:** [docs/USAGE.md](./docs/USAGE.md)
 - **Community Outreach Materials:** [docs/USER_OUTREACH.md](./docs/USER_OUTREACH.md)
